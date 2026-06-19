@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Se Resume Banao</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f6f8fc;color:#0d1b2a;min-height:100vh}
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 50%,#7c3aed 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:24px;backdrop-filter:blur(4px)}
+.hero h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(36px,7vw,72px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px}
+.hero h1 span{color:#fbbf24}
+.hero p{font-size:18px;color:rgba(255,255,255,.75);max-width:520px;line-height:1.7;margin-bottom:36px}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.btn-hero-primary{background:#fff;color:#2563eb;padding:14px 32px;border-radius:12px;font-weight:700;font-size:16px;border:none;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.btn-hero-outline{background:transparent;color:#fff;padding:14px 32px;border-radius:12px;font-weight:700;font-size:16px;border:2px solid rgba(255,255,255,.4);cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.btn-hero-outline:hover{background:rgba(255,255,255,.1)}
+.steps-row{display:flex;gap:24px;margin-top:56px;flex-wrap:wrap;justify-content:center}
+.step-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:14px 20px;color:#fff;text-align:center;min-width:120px;backdrop-filter:blur(4px)}
+.step-num{font-size:24px;margin-bottom:6px}
+.step-txt{font-size:12px;font-weight:600;opacity:.8}
+.footer{text-align:center;color:rgba(255,255,255,.4);font-size:12px;margin-top:40px;position:relative;z-index:1}
+.footer a{color:rgba(255,255,255,.6);text-decoration:none}
+.footer a:hover{color:#fff}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-badge">📄 QR Se Resume Banao — v2.0</div>
+  <h1>Ek QR Scan<br>Aur Resume <span>Ready!</span></h1>
+  <p>Apni dukaan pe QR lagao, customer scan karein, details bharein, PDF ban jaaye aur automatically print ho jaaye.</p>
+  <div class="hero-btns">
+    <button class="btn-hero-primary" onclick="window.location='/dashboard'">🏪 Admin Dashboard</button>
+    <button class="btn-hero-outline" onclick="alert('QR code scan karo ya /resume/SHOP_ID pe jao')">📱 Customer View Demo</button>
+  </div>
+  <div class="steps-row">
+    <div class="step-pill"><div class="step-num">📱</div><div class="step-txt">QR Scan</div></div>
+    <div class="step-pill"><div class="step-num">📝</div><div class="step-txt">Details Bharein</div></div>
+    <div class="step-pill"><div class="step-num">👁</div><div class="step-txt">Preview</div></div>
+    <div class="step-pill"><div class="step-num">💳</div><div class="step-txt">Pay</div></div>
+    <div class="step-pill"><div class="step-num">🖨️</div><div class="step-txt">Auto Print</div></div>
+  </div>
+  <div class="footer">
+    <p>© 2026 All Rights Reserved | Developed by <a href="https://instagram.com/rupeshkr73" target="_blank">Rupesh Kumar Mahato</a></p>
+  </div>
+</div>
+</body>
+</html>

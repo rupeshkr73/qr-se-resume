@@ -1,0 +1,22 @@
+{
+  "name": "qr-se-resume",
+  "version": "1.0.0",
+  "description": "QR Se Resume Banao - Automated Resume Builder & Print System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.3",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>QR Se Resume Banao</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f0f4ff;--white:#fff;--border:#dde4f0;
+  --text:#0d1b2a;--muted:#6b7a99;
+  --primary:#2563eb;--primary-d:#1d4ed8;--primary-l:#eff4ff;
+  --green:#16a34a;--green-l:#f0fdf4;
+  --amber:#d97706;--amber-l:#fffbeb;
+  --red:#dc2626;--red-l:#fef2f2;
+  --purple:#7c3aed;--purple-l:#f5f3ff;
+  --r:12px;--rl:18px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;padding-bottom:80px}
+.wrap{max-width:480px;margin:0 auto;padding:14px 14px 20px}
+
+/* Header */
+.header{background:linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed);border-radius:var(--rl);padding:18px 20px;margin-bottom:16px;display:flex;gap:14px;align-items:center}
+.h-icon{width:46px;height:46px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.h-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:800;color:#fff}
+.h-sub{color:rgba(255,255,255,.6);font-size:12px;margin-top:2px}
+
+/* Steps */
+.steps{display:flex;margin-bottom:16px;position:relative}
+.steps::before{content:'';position:absolute;top:12px;left:12px;right:12px;height:2px;background:var(--border)}
+.step{flex:1;text-align:center;position:relative;z-index:1}
+.dot{width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--muted);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;transition:all .3s}
+.step.active .dot{background:var(--primary);color:#fff}
+.step.done .dot{background:var(--green);color:#fff}
+.step-lbl{font-size:9px;color:var(--muted);font-weight:600}
+.step.active .step-lbl{color:var(--primary);font-weight:700}
+
+/* Sections */
+.sec{display:none}.sec.on{display:block}
+
+/* Cards */
+.card{background:var(--white);border-radius:var(--rl);padding:18px;margin-bottom:14px;border:1px solid var(--border)}
+.card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;color:var(--text);margin-bottom:3px}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+
+/* Progress */
+.prog-bar{background:var(--border);border-radius:10px;height:5px;margin-bottom:18px;overflow:hidden}
+.prog-fill{background:linear-gradient(90deg,var(--primary),var(--purple));height:100%;border-radius:10px;transition:width .5s}
+
+/* Form */
+.fg{margin-bottom:13px}
+.fl{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.req{color:var(--red);font-size:11px}
+.fi{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border .2s;background:var(--white)}
+.fi:focus{border-color:var(--primary)}
+.fi::placeholder{color:#c0c8dc}
+textarea.fi{resize:vertical;min-height:70px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Education block */
+.edu-block{background:var(--bg);border-radius:10px;padding:13px;margin-bottom:10px;border:1px solid var(--border)}
+.edu-block-title{font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.extra-edu-list{margin-top:4px}
+.extra-edu-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;position:relative}
+.remove-btn{position:absolute;top:8px;right:8px;background:var(--red-l);border:none;color:var(--red);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px;font-weight:700}
+.add-edu-btn{width:100%;padding:10px;border-radius:10px;border:1.5px dashed var(--primary);background:var(--primary-l);color:var(--primary);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;transition:.2s}
+.add-edu-btn:hover{background:#dbeafe}
+
+/* Objective preset */
+.obj-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.obj-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:600;cursor:pointer;color:var(--text);transition:.15s}
+.obj-chip:hover,.obj-chip.sel{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* Template grid */
+.tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.tpl-card{border-radius:14px;cursor:pointer;border:2px solid var(--border);transition:all .2s;overflow:hidden;position:relative;background:var(--white)}
+.tpl-card:hover{border-color:#93c5fd;transform:translateY(-2px)}
+.tpl-card.sel{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.tpl-card.sel::after{content:'✓';position:absolute;top:7px;right:7px;width:20px;height:20px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.tpl-prev{height:120px;overflow:hidden;position:relative}
+.tpl-name{font-size:12px;font-weight:700;padding:7px 10px 2px;color:var(--text)}
+.tpl-tag{font-size:10px;color:var(--muted);padding:0 10px 7px}
+
+/* mini resume inside template card */
+.mr{font-size:5.5px;line-height:1.3;height:100%;position:relative;overflow:hidden}
+
+/* Photo */
+.photo-zone{border:2px dashed var(--border);border-radius:13px;padding:18px;text-align:center;cursor:pointer;background:#fafbff;transition:.2s;position:relative}
+.photo-zone:hover{border-color:var(--primary);background:var(--primary-l)}
+.photo-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo-prev{width:72px;height:90px;border-radius:8px;object-fit:cover;margin:0 auto 8px;display:none;border:2px solid var(--primary)}
+
+/* Buttons */
+.btn{width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff}
+.btn-p:hover{opacity:.92;transform:translateY(-1px)}
+.btn-b{background:var(--bg);color:var(--muted);margin-bottom:10px;font-size:13px;padding:11px}
+.btn-sec{background:var(--primary-l);color:var(--primary);margin-bottom:10px}
+
+/* Preview */
+.preview-wrap{background:var(--white);border-radius:var(--rl);overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
+.preview-hdr{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.preview-hdr h3{font-size:14px;font-weight:700}
+.preview-body{background:#f8fafc;min-height:340px;display:flex;align-items:center;justify-content:center;padding:10px}
+#cvs{max-width:100%;display:block;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+
+/* Color opts */
+.color-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.co{background:var(--white);border-radius:14px;padding:14px;cursor:pointer;border:2px solid var(--border);text-align:center;transition:.2s}
+.co:hover{border-color:#93c5fd}
+.co.sel{border-color:var(--primary);background:var(--primary-l)}
+.co-icon{font-size:26px;margin-bottom:6px}
+.co-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.co-price{font-size:22px;font-weight:800;color:var(--primary);font-family:'Plus Jakarta Sans',sans-serif}
+.co-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* Price card */
+.price-card{background:#0d1b2a;border-radius:var(--rl);padding:20px;color:#fff;margin-bottom:14px}
+.price-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;margin-bottom:12px}
+.pl{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.5);margin-bottom:7px}
+.pl.total{color:#fff;font-weight:700;font-size:19px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);margin-top:6px}
+.pay-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.pb{border:none;border-radius:13px;padding:14px 10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff}
+.pb:hover{transform:translateY(-2px)}
+.pb-online{background:#16a34a}
+.pb-counter{background:#d97706}
+.pb-sub{font-size:10px;font-weight:400;opacity:.8}
+
+/* Success */
+.success{background:var(--white);border-radius:22px;padding:30px 18px;text-align:center;border:1px solid var(--border);display:none}
+.s-icon{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;animation:pop .5s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.s-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:21px;font-weight:800;margin-bottom:5px}
+.s-oid{display:inline-block;margin:8px 0 14px;padding:6px 16px;background:var(--bg);border-radius:8px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px}
+.s-box{padding:16px;border-radius:13px;margin-bottom:12px}
+.s-box.online{background:var(--green-l);border:2px solid #86efac}
+.s-box.counter{background:var(--amber-l);border:2px solid #fcd34d}
+.s-box h4{font-weight:800;margin-bottom:5px}
+.s-box.online h4{color:var(--green)}
+.s-box.counter h4{color:var(--amber)}
+.s-box p{font-size:12px;color:#555;line-height:1.6}
+.amt-box{background:#0d1b2a;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+.amt-box span{font-size:12px;color:rgba(255,255,255,.5)}
+.amt-box strong{font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;color:#4ade80}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#0d1b2a;color:#fff;padding:11px 22px;border-radius:11px;font-size:13px;font-weight:600;z-index:300;transition:.3s cubic-bezier(.175,.885,.32,1.275);max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Loading */
+.loading{display:none;position:fixed;inset:0;background:rgba(13,27,42,.75);z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.loading.show{display:flex}
+.spin{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{color:#fff;font-size:13px;font-weight:600}
+
+/* Footer */
+.site-footer{text-align:center;margin-top:28px;padding:16px 10px;border-top:1px solid var(--border)}
+.site-footer p{font-size:11px;color:var(--muted);line-height:1.7}
+.site-footer a{color:var(--primary);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.site-footer a:hover{text-decoration:underline}
+.insta-logo{width:18px;height:18px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="header">
+  <div class="h-icon">📄</div>
+  <div>
+    <div class="h-title" id="shopName">QR Se Resume Banao</div>
+    <div class="h-sub" id="shopAddr">📍 Loading...</div>
+  </div>
+</div>
+
+<div class="steps">
+  <div class="step active" id="s1"><div class="dot">1</div><div class="step-lbl">Template</div></div>
+  <div class="step" id="s2"><div class="dot">2</div><div class="step-lbl">Details</div></div>
+  <div class="step" id="s3"><div class="dot">3</div><div class="step-lbl">Preview</div></div>
+  <div class="step" id="s4"><div class="dot">4</div><div class="step-lbl">Print</div></div>
+</div>
+
+<!-- ═══ STEP 1: TEMPLATE ═══ -->
+<div class="sec on" id="sec1">
+  <div class="card">
+    <h3>Template Chunein</h3>
+    <div class="card-sub">Apni pasand ka design select karein</div>
+    <div class="tpl-grid" id="tplGrid">
+
+      <!-- T1: Classic Sidebar Blue -->
+      <div class="tpl-card" data-t="1" onclick="selTpl(1)">
+        <div class="tpl-prev" style="background:#1e3a5f;position:relative">
+          <div style="position:absolute;left:0;top:0;width:40%;height:100%;background:#1e3a5f;padding:6px 4px">
+            <div style="width:20px;height:25px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 3px"></div>
+            <div style="color:#fff;font-size:5px;font-weight:700;text-align:center;margin-bottom:1px">NAME HERE</div>
+            <div style="color:rgba(255,255,255,.5);font-size:4px;text-align:center;margin-bottom:3px">Job Title</div>
+            <div style="height:.3px;background:rgba(255,255,255,.2);margin:2px 0"></div>
+            <div style="color:rgba(255,255,255,.4);font-size:3.5px;margin-bottom:1px">CONTACT</div>
+            <div style="color:rgba(255,255,255,.7);font-size:4px">📞 9876543210</div>
+            <div style="color:rgba(255,255,255,.7);font-size:4px">📧 email</div>
+            <div style="height:.3px;background:rgba(255,255,255,.2);margin:2px 0"></div>
+            <div style="color:rgba(255,255,255,.4);font-size:3.5px;margin-bottom:1px">SKILLS</div>
+            <div style="color:rgba(255,255,255,.7);font-size:4px">• Python • HTML</div>
+          </div>
+          <div style="position:absolute;left:40%;top:0;right:0;height:100%;background:#fff;padding:5px 5px">
+            <div style="color:#1e3a5f;font-size:5px;font-weight:700;border-bottom:.5px solid #e5e7eb;padding-bottom:1px;margin-bottom:2px">EDUCATION</div>
+            <div style="color:#374151;font-size:4px;margin-bottom:1px">▪ B.Sc IT — 2022</div>
+            <div style="color:#374151;font-size:4px;margin-bottom:2px">▪ 12th CBSE 2019</div>
+            <div style="color:#1e3a5f;font-size:5px;font-weight:700;border-bottom:.5px solid #e5e7eb;padding-bottom:1px;margin-bottom:2px">EXPERIENCE</div>
+            <div style="color:#374151;font-size:4px">▪ TCS — 2yr</div>
+          </div>
+        </div>
+        <div class="tpl-name">Classic Blue</div>
+        <div class="tpl-tag">Professional • Sidebar</div>
+      </div>
+
+      <!-- T2: Elegant Cream -->
+      <div class="tpl-card" data-t="2" onclick="selTpl(2)">
+        <div class="tpl-prev" style="background:#faf7f2">
+          <div style="height:3px;background:#d4a853"></div>
+          <div style="padding:5px 7px;text-align:center;border-bottom:.5px solid #d4a853">
+            <div style="color:#2c1810;font-size:6px;font-weight:700;letter-spacing:.5px">FULL NAME</div>
+            <div style="height:.5px;background:#d4a853;margin:2px 10px"></div>
+            <div style="color:#8b6914;font-size:4.5px">Job Title</div>
+          </div>
+          <div style="padding:5px 7px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <div>
+              <div style="color:#2c1810;font-size:4.5px;font-weight:700;border-bottom:.3px solid #d4a853;margin-bottom:1px">EDUCATION</div>
+              <div style="color:#4a3728;font-size:4px">• B.Sc IT 2022</div>
+              <div style="color:#4a3728;font-size:4px">• 12th CBSE</div>
+              <div style="color:#2c1810;font-size:4.5px;font-weight:700;border-bottom:.3px solid #d4a853;margin:3px 0 1px">CONTACT</div>
+              <div style="color:#4a3728;font-size:4px">9876543210</div>
+            </div>
+            <div>
+              <div style="color:#2c1810;font-size:4.5px;font-weight:700;border-bottom:.3px solid #d4a853;margin-bottom:1px">SKILLS</div>
+              <div style="color:#4a3728;font-size:4px">• Python</div>
+              <div style="color:#4a3728;font-size:4px">• MS Excel</div>
+            </div>
+          </div>
+        </div>
+        <div class="tpl-name">Elegant Cream</div>
+        <div class="tpl-tag">Traditional • Formal</div>
+      </div>
+
+      <!-- T3: Modern Teal -->
+      <div class="tpl-card" data-t="3" onclick="selTpl(3)">
+        <div class="tpl-prev" style="background:#fff">
+          <div style="background:#0f766e;padding:7px">
+            <div style="display:flex;align-items:center;gap:5px">
+              <div style="width:18px;height:22px;background:rgba(255,255,255,.2);border-radius:2px;flex-shrink:0"></div>
+              <div>
+                <div style="color:#fff;font-size:6px;font-weight:700">FULL NAME</div>
+                <div style="color:#99f6e4;font-size:4.5px">Job Title</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;padding:5px">
+            <div style="width:45%;padding-right:4px;border-right:.5px solid #e5e7eb">
+              <div style="color:#0f766e;font-size:4px;font-weight:700;margin-bottom:2px">CONTACT</div>
+              <div style="color:#374151;font-size:4px">📞 9876543210</div>
+              <div style="color:#0f766e;font-size:4px;font-weight:700;margin:3px 0 2px">SKILLS</div>
+              <div style="background:#ccfbf1;border-radius:2px;padding:1px 3px;color:#0f766e;font-size:3.5px;display:inline-block;margin-bottom:1px">Python</div>
+              <div style="background:#ccfbf1;border-radius:2px;padding:1px 3px;color:#0f766e;font-size:3.5px;display:inline-block">Excel</div>
+            </div>
+            <div style="padding-left:4px;width:55%">
+              <div style="color:#0f766e;font-size:4px;font-weight:700;margin-bottom:2px">EDUCATION</div>
+              <div style="color:#374151;font-size:4px;margin-bottom:1px">▪ B.Sc IT — 2022</div>
+              <div style="color:#374151;font-size:4px">▪ 12th CBSE</div>
+            </div>
+          </div>
+        </div>
+        <div class="tpl-name">Modern Teal</div>
+        <div class="tpl-tag">Fresh • Two Column</div>
+      </div>
+
+      <!-- T4: Minimal Clean -->
+      <div class="tpl-card" data-t="4" onclick="selTpl(4)">
+        <div class="tpl-prev" style="background:#fff">
+          <div style="height:6px;background:#2563eb"></div>
+          <div style="padding:6px 8px">
+            <div style="color:#111;font-size:6.5px;font-weight:700">FULL NAME</div>
+            <div style="color:#2563eb;font-size:4.5px;font-weight:700;margin-bottom:4px">Job Title</div>
+            <div style="color:#111;font-size:4px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">EDUCATION</div>
+            <div style="height:.4px;background:#2563eb;margin:1px 0 2px"></div>
+            <div style="color:#374151;font-size:4px">▪ B.Sc IT — 2022</div>
+            <div style="color:#374151;font-size:4px;margin-bottom:3px">▪ 12th CBSE</div>
+            <div style="color:#111;font-size:4px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">SKILLS</div>
+            <div style="height:.4px;background:#2563eb;margin:1px 0 2px"></div>
+            <div style="color:#374151;font-size:4px">Python • HTML • Excel</div>
+          </div>
+        </div>
+        <div class="tpl-name">Minimal Pro</div>
+        <div class="tpl-tag">Clean • Single Column</div>
+      </div>
+
+      <!-- T5: Vibrant Orange Sidebar -->
+      <div class="tpl-card" data-t="5" onclick="selTpl(5)">
+        <div class="tpl-prev" style="background:#fff;position:relative">
+          <div style="position:absolute;left:0;top:0;width:38%;height:100%;background:#ea580c;padding:6px 4px">
+            <div style="width:18px;height:22px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 3px"></div>
+            <div style="color:#fff;font-size:5px;font-weight:700;text-align:center">NAME</div>
+            <div style="height:.3px;background:rgba(255,255,255,.3);margin:3px 0"></div>
+            <div style="color:rgba(255,255,255,.6);font-size:3.5px;margin-bottom:1px">CONTACT</div>
+            <div style="color:rgba(255,255,255,.85);font-size:4px">📞 9876543210</div>
+            <div style="color:rgba(255,255,255,.6);font-size:3.5px;margin:2px 0 1px">SKILLS</div>
+            <div style="color:rgba(255,255,255,.85);font-size:4px">• Python</div>
+          </div>
+          <div style="position:absolute;left:38%;top:0;right:0;height:100%;padding:5px">
+            <div style="color:#ea580c;font-size:5px;font-weight:700;border-bottom:.5px solid #fed7aa;padding-bottom:1px;margin-bottom:2px">OBJECTIVE</div>
+            <div style="color:#374151;font-size:4px;margin-bottom:2px">Seeking opportunities...</div>
+            <div style="color:#ea580c;font-size:5px;font-weight:700;border-bottom:.5px solid #fed7aa;padding-bottom:1px;margin-bottom:2px">EDUCATION</div>
+            <div style="color:#374151;font-size:4px">▪ B.Sc IT 2022</div>
+            <div style="color:#374151;font-size:4px">▪ 12th 2019</div>
+          </div>
+        </div>
+        <div class="tpl-name">Vibrant Orange</div>
+        <div class="tpl-tag">Colorful • Sidebar</div>
+      </div>
+
+      <!-- T6: Rupesh's Shop Classic (based on your templates) -->
+      <div class="tpl-card" data-t="6" onclick="selTpl(6)">
+        <div class="tpl-prev" style="background:#fff;padding:6px">
+          <div style="text-align:center;border-bottom:1px solid #374151;padding-bottom:4px;margin-bottom:4px">
+            <div style="font-size:6px;font-weight:700;color:#111;letter-spacing:.3px">RESUME</div>
+            <div style="font-size:5.5px;font-weight:700;color:#111">FULL NAME</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:4px;color:#374151">
+            <div><b style="color:#111;font-size:4px">Father:</b> Name</div>
+            <div><b style="color:#111;font-size:4px">DOB:</b> 01-01-2000</div>
+            <div><b style="color:#111;font-size:4px">Phone:</b> 9876543210</div>
+            <div><b style="color:#111;font-size:4px">Email:</b> email</div>
+          </div>
+          <div style="margin-top:4px;border-top:.5px solid #e5e7eb;padding-top:3px">
+            <div style="font-size:4.5px;font-weight:700;color:#111;text-align:center;background:#f3f4f6;margin-bottom:2px">EDUCATIONAL QUALIFICATION</div>
+            <div style="font-size:3.5px;color:#374151">Matric | Board | Year | %</div>
+            <div style="font-size:3.5px;color:#374151">Inter | Board | Year | %</div>
+          </div>
+        </div>
+        <div class="tpl-name">Shop Classic</div>
+        <div class="tpl-tag">Standard • Table Format</div>
+      </div>
+
+    </div>
+    <button class="btn btn-p" onclick="goForm()" id="tplBtn" disabled>Aage Badhein →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 2: FORM ═══ -->
+<div class="sec" id="sec2">
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:15%"></div></div>
+
+  <!-- SECTION A: Personal -->
+  <div class="card" id="fA">
+    <h3>👤 Personal Details</h3>
+    <div class="card-sub">Step 1 of 5 — Basic info</div>
+    <div class="fg"><div class="fl">Full Name <span class="req">*</span></div><input class="fi" id="f_name" placeholder="Jaise: Rahul Kumar Sharma"></div>
+    <div class="fr">
+      <div class="fg"><div class="fl">Father's Name <span class="req">*</span></div><input class="fi" id="f_father" placeholder="Pita ji ka naam"></div>
+      <div class="fg"><div class="fl">Date of Birth <span class="req">*</span></div><input type="date" class="fi" id="f_dob"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><div class="fl">Gender <span class="req">*</span></div>
+        <select class="fi" id="f_gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+      </div>
+      <div class="fg"><div class="fl">Marital Status</div>
+        <select class="fi" id="f_marital"><option value="">Select</option><option>Unmarried</option><option>Married</option><option>Divorced</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><div class="fl">Nationality</div><input class="fi" id="f_nat" value="Indian"></div>
+      <div class="fg"><div class="fl">Language Known</div><input class="fi" id="f_lang" placeholder="Hindi, English"></div>
+    </div>
+    <div class="fg"><div class="fl">Present Address <span class="req">*</span></div><textarea class="fi" id="f_addr" placeholder="Village/Town, Post, PS, District, State, Pin Code"></textarea></div>
+    <button class="btn btn-p" onclick="nxt('A')">Aage →</button>
+    <button class="btn btn-b" onclick="goStep(1)">← Wapas</button>
+  </div>
+
+  <!-- SECTION B: Contact & Profile -->
+  <div class="card hidden" id="fB">
+    <h3>📞 Contact & Profile</h3>
+    <div class="card-sub">Step 2 of 5 — Contact details</div>
+    <div class="fr">
+      <div class="fg"><div class="fl">Mobile <span class="req">*</span></div><input type="tel" class="fi" id="f_phone" placeholder="10-digit number"></div>
+      <div class="fg"><div class="fl">Email ID</div><input type="email" class="fi" id="f_email" placeholder="email@gmail.com"></div>
+    </div>
+    <div class="fg"><div class="fl">Job Title / Designation</div><input class="fi" id="f_jobtitle" placeholder="Jaise: Software Developer, Teacher, Nurse, Accountant"></div>
+    <div class="fg">
+      <div class="fl">Stream / Field <span class="req">*</span></div>
+      <select class="fi" id="f_stream" onchange="updateObjective()">
+        <option value="">— Select stream —</option>
+        <optgroup label="Medical / Paramedical">
+          <option value="anm">ANM / GNM Nursing</option>
+          <option value="bsc_nursing">B.Sc Nursing</option>
+          <option value="lab_tech">Lab Technician</option>
+          <option value="pharmacy">Pharmacy (D.Pharm / B.Pharm)</option>
+          <option value="mbbs">MBBS / Medical</option>
+        </optgroup>
+        <optgroup label="Engineering / Technical">
+          <option value="iti">ITI (Electrician / Fitter / Welder etc.)</option>
+          <option value="diploma_eng">Diploma Engineering</option>
+          <option value="btech">B.Tech / BE</option>
+          <option value="civil_eng">Civil Engineering</option>
+        </optgroup>
+        <optgroup label="Computer / IT">
+          <option value="bca">BCA / MCA</option>
+          <option value="bsc_cs">B.Sc Computer Science / IT</option>
+          <option value="dca">DCA / PGDCA</option>
+          <option value="web_dev">Web Developer / Programmer</option>
+        </optgroup>
+        <optgroup label="Arts / Commerce / Science">
+          <option value="ba">B.A (Arts)</option>
+          <option value="bcom">B.Com (Commerce)</option>
+          <option value="bsc">B.Sc (Science)</option>
+        </optgroup>
+        <optgroup label="Education">
+          <option value="bed">B.Ed / D.El.Ed / Teacher</option>
+        </optgroup>
+        <optgroup label="Animation / Media">
+          <option value="animation">Animation / Video Editing</option>
+          <option value="media">Media / Journalism</option>
+        </optgroup>
+        <optgroup label="General">
+          <option value="fresher">Fresher (Any Field)</option>
+          <option value="govt">Government Job Aspirant</option>
+          <option value="custom">Other / Custom</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl">Career Objective <span style="color:var(--green);font-size:10px">(auto-filled, edit karo)</span></div>
+      <textarea class="fi" id="f_obj" style="min-height:90px" placeholder="Stream select karo — auto fill ho jayega"></textarea>
+    </div>
+    <button class="btn btn-p" onclick="nxt('B')">Aage →</button>
+    <button class="btn btn-b" onclick="prv('B')">← Wapas</button>
+  </div>
+
+  <!-- SECTION C: Education -->
+  <div class="card hidden" id="fC">
+    <h3>🎓 Education</h3>
+    <div class="card-sub">Step 3 of 5 — Qualifications</div>
+
+    <!-- Matric -->
+    <div class="edu-block">
+      <div class="edu-block-title">📘 Matric (10th)</div>
+      <div class="fg"><div class="fl">Board / University <span class="req">*</span></div><input class="fi" id="e10_board" placeholder="Jaise: JAC Ranchi / CBSE Delhi / ICSE"></div>
+      <div class="fr3">
+        <div class="fg"><div class="fl">Year of Passing</div><input class="fi" id="e10_year" placeholder="2017" maxlength="4"></div>
+        <div class="fg"><div class="fl">Percentage</div><input class="fi" id="e10_pct" placeholder="78.2%"></div>
+        <div class="fg"><div class="fl">Division</div>
+          <select class="fi" id="e10_div">
+            <option value="">—</option><option>1st</option><option>2nd</option><option>3rd</option><option>Distinction</option><option>Pass</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inter -->
+    <div class="edu-block">
+      <div class="edu-block-title">📗 Intermediate (12th / ISc / ICom / IA)</div>
+      <div class="fg"><div class="fl">Board / University</div><input class="fi" id="e12_board" placeholder="Jaise: JAC Ranchi / CBSE Delhi"></div>
+      <div class="fr3">
+        <div class="fg"><div class="fl">Year</div><input class="fi" id="e12_year" placeholder="2019" maxlength="4"></div>
+        <div class="fg"><div class="fl">Percentage</div><input class="fi" id="e12_pct" placeholder="65%"></div>
+        <div class="fg"><div class="fl">Division</div>
+          <select class="fi" id="e12_div">
+            <option value="">—</option><option>1st</option><option>2nd</option><option>3rd</option><option>Distinction</option><option>Pass</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Higher Education -->
+    <div class="edu-block">
+      <div class="edu-block-title">🎓 Graduation / Highest Degree</div>
+      <div class="fg"><div class="fl">Course Name <span class="req">*</span></div><input class="fi" id="eg_course" placeholder="Jaise: B.Sc IT / B.A History / ANM / ITI Electrician"></div>
+      <div class="fg"><div class="fl">Board / University <span class="req">*</span></div><input class="fi" id="eg_board" placeholder="Jaise: VBU Hazaribagh / JNRC Ranchi / NCVT"></div>
+      <div class="fr3">
+        <div class="fg"><div class="fl">Year</div><input class="fi" id="eg_year" placeholder="2022" maxlength="4"></div>
+        <div class="fg"><div class="fl">Percentage</div><input class="fi" id="eg_pct" placeholder="75%"></div>
+        <div class="fg"><div class="fl">Division</div>
+          <select class="fi" id="eg_div">
+            <option value="">—</option><option>1st</option><option>2nd</option><option>3rd</option><option>Distinction</option><option>Appearing</option><option>Pass</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extra Qualifications -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">➕ Extra / Technical Qualifications</div>
+      <div id="extraEduList" class="extra-edu-list"></div>
+      <button class="add-edu-btn" onclick="addExtraEdu()">+ Add Extra Qualification</button>
+    </div>
+
+    <button class="btn btn-p" onclick="nxt('C')">Aage →</button>
+    <button class="btn btn-b" onclick="prv('C')">← Wapas</button>
+  </div>
+
+  <!-- SECTION D: Skills & Experience -->
+  <div class="card hidden" id="fD">
+    <h3>💼 Skills & Experience</h3>
+    <div class="card-sub">Step 4 of 5 — Work & skills</div>
+    <div class="fg"><div class="fl">Skills <span class="req">*</span></div><input class="fi" id="f_skills" placeholder="Jaise: MS Office, Tally, Python, Photoshop, Spoken English"></div>
+    <div class="fg"><div class="fl">Work Experience</div><textarea class="fi" id="f_exp" placeholder="Jaise: TCS — Software Engineer — 2022 to 2024&#10;Patliputra Hospital — Staff Nurse — 2021-2023&#10;(Naya hai to: Fresher)"></textarea></div>
+    <div class="fg"><div class="fl">Extra Certifications / Awards</div><textarea class="fi" id="f_cert" placeholder="Jaise: Google Digital Marketing Certificate&#10;Arena Animation — 2D Animation Award"></textarea></div>
+    <div class="fg"><div class="fl">Hobbies / Interests</div><input class="fi" id="f_hobbies" placeholder="Jaise: Listening Music, Browsing Internet, Reading"></div>
+    <button class="btn btn-p" onclick="nxt('D')">Aage →</button>
+    <button class="btn btn-b" onclick="prv('D')">← Wapas</button>
+  </div>
+
+  <!-- SECTION E: Photo -->
+  <div class="card hidden" id="fE">
+    <h3>📸 Passport Photo</h3>
+    <div class="card-sub">Step 5 of 5 — Optional lekin achha lagta hai</div>
+    <div class="photo-zone" id="pZone">
+      <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(this)">
+      <img id="photoPrev" class="photo-prev" alt="">
+      <div id="pIcon" style="font-size:36px;margin-bottom:8px">🖼️</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text)">Passport Photo Select Karein</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">JPG / PNG — 35×45mm size best</div>
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn btn-p" onclick="genPDF()">✨ Resume Banao & Preview Dekho</button>
+    <button class="btn btn-b" onclick="prv('E')">← Wapas</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 3: PREVIEW ═══ -->
+<div class="sec" id="sec3">
+  <div class="preview-wrap">
+    <div class="preview-hdr">
+      <h3>📄 Resume Preview</h3>
+      <span style="font-size:11px;color:var(--muted)" id="prevTplLbl"></span>
+    </div>
+    <div class="preview-body"><canvas id="cvs"></canvas></div>
+  </div>
+  <button class="btn btn-sec" onclick="goStep(2);showFsec('E')">✏️ Edit Karein</button>
+  <button class="btn btn-p" onclick="goStep(4)">Print Karein →</button>
+</div>
+
+<!-- ═══ STEP 4: PRINT & PAY ═══ -->
+<div class="sec" id="sec4">
+  <div class="card">
+    <h3>🖨️ Print Options</h3>
+    <div class="card-sub">Color aur print type chunein</div>
+    <div class="color-opts">
+      <div class="co sel" id="co_bw" onclick="selColor('bw')">
+        <div class="co-icon">⬛</div>
+        <div class="co-name">Black & White</div>
+        <div class="co-price" id="bw_price">₹20</div>
+        <div class="co-sub">Crisp • Long lasting</div>
+      </div>
+      <div class="co" id="co_clr" onclick="selColor('color')">
+        <div class="co-icon">🎨</div>
+        <div class="co-name">Color Print</div>
+        <div class="co-price" id="clr_price">₹30</div>
+        <div class="co-sub">Vibrant • Attractive</div>
+      </div>
+    </div>
+  </div>
+  <div class="price-card">
+    <h3>💰 Total Amount</h3>
+    <div class="pl"><span>Resume (1 page)</span><span id="pprice">₹20</span></div>
+    <div class="pl"><span>Copies</span><span>1</span></div>
+    <div class="pl total"><span>Total</span><span id="ptotal">₹20</span></div>
+    <div class="pay-btns">
+      <button class="pb pb-online" onclick="payOnline()">
+        💳 Pay Online
+        <span class="pb-sub">Razorpay / UPI</span>
+      </button>
+      <button class="pb pb-counter" onclick="payCounter()">
+        🏪 Counter Pe
+        <span class="pb-sub">Cash / UPI dena</span>
+      </button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.35);margin-top:10px">Payment ke baad automatic print hoga 🖨️</div>
+  </div>
+</div>
+
+<!-- ═══ SUCCESS ═══ -->
+<div class="success" id="success">
+  <div class="s-icon" id="sIcon">✅</div>
+  <div class="s-title" id="sTitle">Print Queue Mein!</div>
+  <div class="s-oid" id="sOid">ORDER-XXXXXX</div>
+  <div class="s-box" id="sBox">
+    <h4 id="sBoxTitle">Processing...</h4>
+    <p id="sBoxMsg">Please wait...</p>
+  </div>
+  <div class="amt-box">
+    <span>Amount</span>
+    <strong id="sAmt">₹20</strong>
+  </div>
+  <button class="btn btn-p" style="margin-top:14px" onclick="location.reload()">🔄 Naya Resume Banao</button>
+</div>
+
+<!-- FOOTER — always visible -->
+<div class="site-footer">
+  <p>© 2026 All Rights Reserved | This System is Developed by Rupesh Kumar Mahato</p>
+  <p style="margin-top:4px">
+    <a href="https://instagram.com/rupeshkr73" target="_blank" rel="noopener">
+      <svg class="insta-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="5%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs>
+        <rect width="24" height="24" rx="6" fill="url(#ig)"/>
+        <path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" fill="#fff"/>
+        <circle cx="15.8" cy="8.2" r="1" fill="#fff"/>
+        <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" stroke="#fff" stroke-width="1.5" fill="none"/>
+      </svg>
+      @rupeshkr73 on Instagram
+    </a>
+  </p>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="loading" id="loading"><div class="spin"></div><div class="load-txt" id="loadTxt">Please wait...</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG — auto-set from URL
+// ════════════════════════════════════════════════
+const SHOP_ID = location.pathname.split('/').pop() || '';
+const SERVER  = '';  // same-origin
+
+let selTplId   = null;
+let selColorMode = 'bw';
+let photoDataURL = null;
+let pdfBlob      = null;
+let jobId        = null;
+let shopData     = { price_bw: 20, price_color: 30 };
+let extraEduCount = 0;
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+async function init() {
+  try {
+    const r = await fetch(`/api/shop/${SHOP_ID}`);
+    if (r.ok) {
+      shopData = await r.json();
+      document.getElementById('shopName').textContent = shopData.name || 'QR Se Resume';
+      document.getElementById('shopAddr').textContent = '📍 ' + (shopData.address || '');
+      document.getElementById('bw_price').textContent  = '₹' + shopData.price_bw;
+      document.getElementById('clr_price').textContent = '₹' + shopData.price_color;
+      updatePriceDisplay();
+    }
+  } catch {}
+}
+
+// ════════════════════════════════════════════════
+// STEP NAV
+// ════════════════════════════════════════════════
+function goStep(n) {
+  ['sec1','sec2','sec3','sec4'].forEach((id,i) => {
+    document.getElementById(id).classList.toggle('on', i+1 === n);
+  });
+  for (let i=1;i<=4;i++) {
+    const s = document.getElementById('s'+i);
+    s.querySelector('.dot').textContent = i < n ? '✓' : i;
+    s.className = 'step'+(i<n?' done':i===n?' active':'');
+  }
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════════════
+// TEMPLATE
+// ════════════════════════════════════════════════
+function selTpl(n) {
+  selTplId = n;
+  document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('sel'));
+  document.querySelector(`[data-t="${n}"]`).classList.add('sel');
+  document.getElementById('tplBtn').disabled = false;
+  toast('Template select hua ✅');
+}
+
+function goForm() {
+  if (!selTplId) { toast('Pehle template chunein!'); return; }
+  goStep(2);
+  showFsec('A');
+}
+
+// ════════════════════════════════════════════════
+// FORM SECTIONS A–E
+// ════════════════════════════════════════════════
+const SECS = ['A','B','C','D','E'];
+const PROG = {A:15,B:32,C:55,D:75,E:90};
+
+function showFsec(s) {
+  SECS.forEach(x => {
+    const el = document.getElementById('f'+x);
+    if (el) el.classList.toggle('hidden', x !== s);
+  });
+  document.getElementById('progFill').style.width = PROG[s] + '%';
+  window.scrollTo(0,0);
+}
+
+function nxt(cur) {
+  // Validation
+  if (cur==='A') {
+    if (!v('f_name','Naam likhna zaroori hai!')) return;
+    if (!v('f_father',"Pita ji ka naam likhein!")) return;
+    if (!document.getElementById('f_dob').value) { toast('Date of Birth chunein!'); return; }
+    if (!document.getElementById('f_gender').value) { toast('Gender select karein!'); return; }
+    if (!v('f_addr','Address likhna zaroori hai!')) return;
+    showFsec('B');
+  } else if (cur==='B') {
+    if (!v('f_phone','Mobile number zaroori hai!')) return;
+    if (!document.getElementById('f_stream').value) { toast('Stream / Field select karein!'); return; }
+    showFsec('C');
+  } else if (cur==='C') {
+    if (!v('e10_board','Matric board name likhein!')) return;
+    if (!v('eg_course','Highest degree course likhein!')) return;
+    if (!v('eg_board','Highest degree board likhein!')) return;
+    showFsec('D');
+  } else if (cur==='D') {
+    if (!v('f_skills','Skills likhna zaroori hai!')) return;
+    showFsec('E');
+  }
+}
+
+function prv(cur) {
+  const idx = SECS.indexOf(cur);
+  if (idx > 0) showFsec(SECS[idx-1]);
+  else goStep(1);
+}
+
+function v(id, msg) {
+  const el = document.getElementById(id);
+  if (!el || !el.value.trim()) { toast('❌ ' + msg); return false; }
+  return true;
+}
+
+// ════════════════════════════════════════════════
+// CAREER OBJECTIVE AUTO-FILL
+// ════════════════════════════════════════════════
+const OBJ_MAP = {
+  anm: "I am seeking employment to utilize my nursing and patient care skills so that I can contribute my knowledge and abilities to achieve growth in the healthcare/medical industry.",
+  bsc_nursing: "I am seeking employment to utilize my nursing knowledge and clinical skills to provide quality patient care and contribute to a reputed healthcare institution.",
+  lab_tech: "I am seeking a position as a Laboratory Technician where I can apply my technical skills and knowledge in diagnostic testing to contribute effectively to patient care.",
+  pharmacy: "I am seeking a challenging position in the pharmaceutical field where I can apply my academic knowledge and contribute to the healthcare industry.",
+  mbbs: "I am seeking a position as a medical professional where I can apply my medical expertise to provide quality patient care and contribute to public health.",
+  iti: "I am seeking employment to exchange my technical skills and hands-on experience so that I can contribute my knowledge and abilities to grow in the industrial/technical sector.",
+  diploma_eng: "I am seeking a challenging role in the engineering field to utilize my technical knowledge and skills for the growth of the organization.",
+  btech: "I am seeking a position in the engineering field where I can utilize my technical knowledge and problem-solving skills to contribute to organizational goals.",
+  civil_eng: "I am seeking a role in civil engineering where I can apply my knowledge of construction and project management to contribute to infrastructure development.",
+  bca: "I am seeking employment to utilize my computer application skills and software knowledge to contribute effectively in the IT sector.",
+  bsc_cs: "I am seeking employment to exchange my computer science skills so that I can contribute my programming knowledge and abilities to achieve goals in the IT industry.",
+  dca: "I am seeking a role where I can utilize my computer application knowledge and skills to contribute to organizational efficiency and growth.",
+  web_dev: "I am seeking a position as a Web Developer where I can utilize my programming and design skills to build efficient and user-friendly applications.",
+  ba: "I am seeking employment to utilize my analytical and communication skills gained through my Arts education to contribute effectively to an organization.",
+  bcom: "I am seeking a position in the finance or commerce field where I can apply my accounting and business knowledge to contribute to organizational growth.",
+  bsc: "I am seeking employment to utilize my scientific knowledge and analytical skills to contribute effectively to research or industry.",
+  bed: "I am seeking a teaching position where I can utilize my educational knowledge and passion for learning to inspire students and contribute to academic excellence.",
+  animation: "I am seeking employment to exchange my animation and video editing skills so that I can contribute my creative abilities to achieve goals in the media and entertainment industry. Creative and innovative, ready to use learned skills to enhance any production.",
+  media: "I am seeking a position in the media industry where I can utilize my communication and storytelling skills to create impactful content.",
+  fresher: "I am seeking an entry-level position where I can utilize my academic knowledge and eagerness to learn, to contribute effectively to organizational goals and grow professionally.",
+  govt: "I am seeking a government position where I can serve the public and contribute my skills and dedication to national development.",
+  custom: ""
+};
+
+function updateObjective() {
+  const stream = document.getElementById('f_stream').value;
+  const objEl  = document.getElementById('f_obj');
+  if (stream && OBJ_MAP[stream] !== undefined) {
+    objEl.value = OBJ_MAP[stream];
+  }
+}
+
+// ════════════════════════════════════════════════
+// EXTRA EDUCATION
+// ════════════════════════════════════════════════
+function addExtraEdu() {
+  extraEduCount++;
+  const id = 'ex_' + extraEduCount;
+  const div = document.createElement('div');
+  div.className = 'extra-edu-item';
+  div.id = id;
+  div.innerHTML = `
+    <button class="remove-btn" onclick="document.getElementById('${id}').remove()">✕</button>
+    <div class="fg"><div class="fl">Course / Qualification</div><input class="fi" id="${id}_course" placeholder="Jaise: DCA / B.A History / ITI Electrician / G.N.M"></div>
+    <div class="fg"><div class="fl">Board / University / Institute</div><input class="fi" id="${id}_board" placeholder="Jaise: VBU / NCVT / Arena Animation Dhanbad"></div>
+    <div class="fr3">
+      <div class="fg"><div class="fl">Year</div><input class="fi" id="${id}_year" placeholder="2022" maxlength="4"></div>
+      <div class="fg"><div class="fl">%</div><input class="fi" id="${id}_pct" placeholder="75%"></div>
+      <div class="fg"><div class="fl">Division</div>
+        <select class="fi" id="${id}_div"><option value="">—</option><option>1st</option><option>2nd</option><option>3rd</option><option>Distinction</option><option>Appearing</option><option>Pass</option></select>
+      </div>
+    </div>
+  `;
+  document.getElementById('extraEduList').appendChild(div);
+}
+
+function getExtraEdus() {
+  const items = [];
+  document.querySelectorAll('.extra-edu-item').forEach(el => {
+    const pfx = el.id;
+    const course = document.getElementById(pfx+'_course')?.value.trim();
+    const board  = document.getElementById(pfx+'_board')?.value.trim();
+    const year   = document.getElementById(pfx+'_year')?.value.trim();
+    const pct    = document.getElementById(pfx+'_pct')?.value.trim();
+    const div    = document.getElementById(pfx+'_div')?.value;
+    if (course) items.push({ course, board, year, pct, div });
+  });
+  return items;
+}
+
+// ════════════════════════════════════════════════
+// PHOTO UPLOAD
+// ════════════════════════════════════════════════
+function handlePhoto(inp) {
+  if (!inp.files[0]) return;
+  if (inp.files[0].size > 5*1024*1024) { toast('Photo 5MB se choti honi chahiye!'); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    photoDataURL = e.target.result;
+    const p = document.getElementById('photoPrev');
+    p.src = photoDataURL; p.style.display = 'block';
+    document.getElementById('pIcon').style.display = 'none';
+    toast('📸 Photo ready!');
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+
+// ════════════════════════════════════════════════
+// COLLECT DATA
+// ════════════════════════════════════════════════
+function gv(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+function collectData() {
+  const extra = getExtraEdus();
+  return {
+    name:     gv('f_name').toUpperCase(),
+    father:   gv('f_father'),
+    dob:      gv('f_dob'),
+    gender:   gv('f_gender'),
+    marital:  gv('f_marital'),
+    nat:      gv('f_nat') || 'Indian',
+    lang:     gv('f_lang') || 'Hindi, English',
+    addr:     gv('f_addr'),
+    phone:    gv('f_phone'),
+    email:    gv('f_email'),
+    jobtitle: gv('f_jobtitle'),
+    stream:   gv('f_stream'),
+    obj:      gv('f_obj'),
+    e10:  { board: gv('e10_board'), year: gv('e10_year'), pct: gv('e10_pct'), div: gv('e10_div') },
+    e12:  { board: gv('e12_board'), year: gv('e12_year'), pct: gv('e12_pct'), div: gv('e12_div') },
+    eg:   { course: gv('eg_course'), board: gv('eg_board'), year: gv('eg_year'), pct: gv('eg_pct'), div: gv('eg_div') },
+    extra,
+    skills:   gv('f_skills'),
+    exp:      gv('f_exp'),
+    cert:     gv('f_cert'),
+    hobbies:  gv('f_hobbies'),
+    photo:    photoDataURL,
+    tpl:      selTplId
+  };
+}
+
+// ════════════════════════════════════════════════
+// PDF GENERATION
+// ════════════════════════════════════════════════
+async function genPDF() {
+  showLoad('✨ Resume ban raha hai...');
+  await delay(80);
+  try {
+    const d = collectData();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const builders = [null,tpl1,tpl2,tpl3,tpl4,tpl5,tpl6];
+    await builders[d.tpl](doc, d);
+    pdfBlob = doc.output('blob');
+    await renderPreview(URL.createObjectURL(pdfBlob));
+    const names = ['','Classic Blue','Elegant Cream','Modern Teal','Minimal Pro','Vibrant Orange','Shop Classic'];
+    document.getElementById('prevTplLbl').textContent = names[d.tpl] || '';
+    hideLoad();
+    goStep(3);
+    toast('🎉 Resume ready!');
+  } catch(e) {
+    hideLoad();
+    console.error(e);
+    toast('❌ Error: '+e.message);
+  }
+}
+
+async function renderPreview(url) {
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf  = await pdfjsLib.getDocument(url).promise;
+    const page = await pdf.getPage(1);
+    const vp   = page.getViewport({scale:1.3});
+    const cvs  = document.getElementById('cvs');
+    cvs.height = vp.height; cvs.width = vp.width;
+    await page.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+  } catch(e) { console.warn('Preview error:',e); }
+}
+
+// ════════════════════════════════════════════════
+// PDF TEMPLATE BUILDERS
+// ════════════════════════════════════════════════
+function wt(doc,txt,x,y,mw,lh) {
+  if (!txt) return y;
+  const lines = doc.splitTextToSize(String(txt),mw);
+  doc.text(lines,x,y);
+  return y + lines.length*lh;
+}
+
+function eduRow(d) {
+  // Returns education rows for table-style templates
+  const rows = [];
+  if (d.e10.board) rows.push({name:'Matric',board:d.e10.board,year:d.e10.year,pct:d.e10.pct,div:d.e10.div});
+  if (d.e12.board) rows.push({name:'Intermediate (I.Sc/I.Com/I.A)',board:d.e12.board,year:d.e12.year,pct:d.e12.pct,div:d.e12.div});
+  if (d.eg.course) rows.push({name:d.eg.course,board:d.eg.board,year:d.eg.year,pct:d.eg.pct,div:d.eg.div});
+  d.extra.forEach(ex => { if(ex.course) rows.push({name:ex.course,board:ex.board,year:ex.year,pct:ex.pct,div:ex.div}); });
+  return rows;
+}
+
+// ─── Template 1: Classic Blue Sidebar ─────────────────────────────────────────
+async function tpl1(doc, d) {
+  const W=210,H=297,SW=72,MX=76;
+  doc.setFillColor(30,58,95); doc.rect(0,0,SW,H,'F');
+  if (d.photo) { try { doc.addImage(d.photo,'JPEG',8,10,54,68); doc.setDrawColor(255,255,255);doc.setLineWidth(.5);doc.rect(8,10,54,68); } catch{} }
+  else { doc.setFillColor(50,80,120);doc.roundedRect(8,10,54,68,3,3,'F'); }
+  doc.setTextColor(255,255,255);doc.setFontSize(9.5);doc.setFont('helvetica','bold');
+  let nn=doc.splitTextToSize(d.name,56); doc.text(nn,SW/2,86,{align:'center'});
+  let sy=86+(nn.length*5.5);
+  doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(160,185,220);
+  if(d.jobtitle){doc.text(d.jobtitle,SW/2,sy,{align:'center'});sy+=5;}
+  doc.setDrawColor(80,110,150);doc.setLineWidth(.3);doc.line(6,sy,SW-4,sy);sy+=5;
+  function ss(title,lines){ doc.setTextColor(150,180,220);doc.setFontSize(6);doc.setFont('helvetica','bold');doc.text(title.toUpperCase(),6,sy);sy+=4; doc.setTextColor(220,232,245);doc.setFontSize(7);doc.setFont('helvetica','normal');for(const l of lines){if(!l)continue;const ls=doc.splitTextToSize(l,60);doc.text(ls,6,sy);sy+=ls.length*4.2;}sy+=2; }
+  ss('CONTACT',[d.phone?'📞 '+d.phone:'',d.email||'',d.addr?(d.addr.split('\n')[0]):''].filter(Boolean));
+  if(d.skills) ss('SKILLS',d.skills.split(',').map(s=>'• '+s.trim()).slice(0,8));
+  ss('PERSONAL',[d.father?'F/O: '+d.father:'',d.dob?'DOB: '+d.dob:'',d.gender?'Gender: '+d.gender:'',d.marital?'Marital: '+d.marital:'','Nat: '+(d.nat||'Indian'),d.lang?'Lang: '+d.lang:''].filter(Boolean));
+
+  let my=16;
+  doc.setFillColor(37,99,235);doc.rect(MX,0,W-MX,9,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('RESUME',MX+3,6.5);
+  function ms(title,y){ doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);doc.text(title,MX+2,y);doc.setDrawColor(37,99,235);doc.setLineWidth(.4);doc.line(MX+2,y+1.5,W-8,y+1.5);return y+6; }
+  if(d.obj){my=ms('CAREER OBJECTIVE',my);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);my=wt(doc,d.obj,MX+2,my,W-MX-12,4.2)+3;}
+  my=ms('EDUCATIONAL QUALIFICATION',my);
+  const rows=eduRow(d);
+  // Table header
+  doc.setFillColor(37,99,235);doc.rect(MX+2,my,W-MX-10,7,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+  doc.text('Examination',MX+4,my+4.5);doc.text('Board/Univ.',MX+40,my+4.5);doc.text('Year',MX+70,my+4.5);doc.text('Div.',MX+84,my+4.5);doc.text('%',MX+97,my+4.5);
+  my+=7;
+  rows.forEach((r,i)=>{ if(i%2===0){doc.setFillColor(239,246,255);doc.rect(MX+2,my-1,W-MX-10,6,'F');} doc.setTextColor(55,65,81);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(r.name||'',MX+4,my+3.5,{maxWidth:34});doc.text(r.board||'',MX+40,my+3.5,{maxWidth:28});doc.text(r.year||'',MX+70,my+3.5);doc.text(r.div||'',MX+84,my+3.5);doc.text(r.pct||'',MX+97,my+3.5);my+=6;});
+  my+=2;
+  if(d.exp){my=ms('WORK EXPERIENCE',my);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);for(const l of d.exp.split('\n').filter(Boolean)){my=wt(doc,'▪ '+l.trim(),MX+4,my,W-MX-14,4.2)+1;}my+=2;}
+  if(d.cert){my=ms('CERTIFICATIONS / AWARDS',my);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);for(const l of d.cert.split('\n').filter(Boolean)){my=wt(doc,'▪ '+l.trim(),MX+4,my,W-MX-14,4.2)+1;}my+=2;}
+  if(d.hobbies){my=ms('HOBBIES & INTERESTS',my);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);my=wt(doc,d.hobbies,MX+4,my,W-MX-14,4.2)+3;}
+  my=ms('DECLARATION',my);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.text('I hereby declare that all information furnished above is true to the best of my knowledge.',MX+2,my,{maxWidth:W-MX-10});my+=10;
+  doc.text('Date: ___________',MX+2,my);doc.text('Signature: ___________',MX+50,my);
+}
+
+// ─── Template 2: Elegant Cream ────────────────────────────────────────────────
+async function tpl2(doc, d) {
+  const W=210;
+  doc.setFillColor(212,168,83);doc.rect(0,0,W,3,'F');
+  let y=14;
+  if(d.photo){try{doc.addImage(d.photo,'JPEG',W-55,10,42,52);doc.setDrawColor(212,168,83);doc.setLineWidth(.7);doc.rect(W-55,10,42,52);}catch{}}
+  doc.setTextColor(44,24,16);doc.setFontSize(18);doc.setFont('times','bold');doc.text(d.name,W/2,y,{align:'center'});y+=6;
+  doc.setDrawColor(212,168,83);doc.setLineWidth(.5);doc.line(18,y,W-18,y);y+=4;
+  doc.setFontSize(9.5);doc.setFont('times','italic');doc.setTextColor(139,105,20);if(d.jobtitle)doc.text(d.jobtitle,W/2,y,{align:'center'});y+=5;
+  doc.setFontSize(8);doc.setFont('times','normal');doc.setTextColor(80,60,40);doc.text([d.phone,d.email].filter(Boolean).join('  ●  '),W/2,y,{align:'center'});y+=8;
+  function cs(t,yy){ doc.setTextColor(44,24,16);doc.setFontSize(9);doc.setFont('times','bold');doc.text(t,14,yy);yy+=1.5;doc.setDrawColor(212,168,83);doc.setLineWidth(.4);doc.line(14,yy,W-14,yy);return yy+4; }
+  function ci(t,yy){ doc.setTextColor(74,55,40);doc.setFontSize(8.5);doc.setFont('times','normal');const ls=doc.splitTextToSize(t,W-28);doc.text(ls,18,yy);return yy+ls.length*4.6; }
+  if(d.obj){y=cs('CAREER OBJECTIVE',y);y=ci(d.obj,y)+4;}
+  y=cs('EDUCATIONAL QUALIFICATION',y);
+  const rows=eduRow(d);
+  doc.setFillColor(212,168,83);doc.rect(14,y,W-28,7,'F');
+  doc.setTextColor(255,252,240);doc.setFontSize(7);doc.setFont('times','bold');
+  ['Name of Examination','Board/University','Year','Division','Percentage'].forEach((h,i)=>{doc.text(h,[14,65,130,155,170][i]+2,y+4.5);});
+  y+=7;
+  rows.forEach((r,i)=>{if(i%2===0){doc.setFillColor(252,249,242);doc.rect(14,y,W-28,7,'F');}doc.setTextColor(55,40,20);doc.setFontSize(8);doc.setFont('times','normal');doc.text(r.name||'',16,y+4.5,{maxWidth:48});doc.text(r.board||'',67,y+4.5,{maxWidth:60});doc.text(r.year||'',132,y+4.5);doc.text(r.div||'',157,y+4.5);doc.text(r.pct||'',172,y+4.5);y+=7;});
+  y+=3;
+  if(d.exp){y=cs('EXPERIENCE EDUCATION',y);for(const l of (d.exp||'').split('\n').filter(Boolean))y=ci('• '+l.trim(),y)+1;y+=3;}
+  y=cs('SKILLS',y);y=ci(d.skills||'',y)+3;
+  y=cs('PERSONAL INFORMATION',y);
+  const pi=[d.father?'Father\'s Name: '+d.father:'',d.dob?'Date of Birth: '+d.dob:'',d.gender?'Gender: '+d.gender:'',d.marital?'Marital Status: '+d.marital:'','Nationality: '+(d.nat||'Indian'),'Language Known: '+(d.lang||'Hindi, English'),'Address: '+d.addr].filter(Boolean);
+  for(const p of pi)y=ci('▪ '+p,y)+1;
+  if(d.hobbies){y+=2;y=cs('INTERESTS AND STRENGTHS',y);y=ci(d.hobbies,y)+3;}
+  y+=3;y=cs('DECLARATION',y);y=ci('I hereby declare that all the information furnished above is true to the best of my knowledge.',y)+6;
+  doc.setFont('times','normal');doc.setFontSize(8.5);doc.setTextColor(44,24,16);doc.text('Date:',14,y);doc.text('Place: '+d.addr.split(',')[0],50,y);doc.text('Signature: _______________',W-65,y);
+  doc.setFillColor(212,168,83);doc.rect(0,H-3,W,3,'F');
+}
+
+// ─── Template 3: Modern Teal ──────────────────────────────────────────────────
+async function tpl3(doc, d) {
+  const W=210;
+  doc.setFillColor(15,118,110);doc.rect(0,0,W,42,'F');
+  if(d.photo){try{doc.addImage(d.photo,'JPEG',W-55,5,40,50);doc.setDrawColor(255,255,255);doc.setLineWidth(.8);doc.rect(W-55,5,40,50);}catch{}}
+  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text(d.name,14,18);
+  doc.setFontSize(9.5);doc.setFont('helvetica','normal');doc.setTextColor(153,246,228);if(d.jobtitle)doc.text(d.jobtitle,14,26);
+  doc.setFontSize(8);doc.setTextColor(200,255,245);
+  const ci=[d.phone,d.email].filter(Boolean).join('   |   ');doc.text(ci,14,34);
+
+  let y=52,half=W/2;
+  function ts(t,x,yy,mw){ doc.setTextColor(15,118,110);doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.text(t,x,yy);doc.setDrawColor(15,118,110);doc.setLineWidth(.4);doc.line(x,yy+1.5,x+mw,yy+1.5);return yy+7; }
+  function ti(t,x,yy,mw){ doc.setTextColor(55,65,81);doc.setFontSize(8);doc.setFont('helvetica','normal');const ls=doc.splitTextToSize('▪ '+t,mw);doc.text(ls,x+2,yy);return yy+ls.length*4.5; }
+
+  // Two column layout
+  let ly=y,ry=y,lx=12,rx=half+5,lw=half-18,rw=half-18;
+
+  // Objective full width
+  if(d.obj){y=ts('CAREER OBJECTIVE',lx,y,W-26);doc.setTextColor(55,65,81);doc.setFontSize(8);doc.setFont('helvetica','normal');y=wt(doc,d.obj,lx+2,y,W-26,4.5)+4;ly=y;ry=y;}
+
+  ry=ts('EDUCATION',rx,ry,rw);
+  for(const r of eduRow(d)){ry=ti(`${r.name}${r.board?' — '+r.board:''}${r.year?' ('+r.year+')':''}${r.pct?' — '+r.pct:''}`,rx,ry,rw)+1;}
+  ry+=2;
+
+  ly=ts('PERSONAL DETAILS',lx,ly,lw);
+  for(const p of [d.father?'F/O: '+d.father:'',d.dob?'DOB: '+d.dob:'',d.gender?'Gender: '+d.gender:'',d.marital?'Marital: '+d.marital:'',d.nat?'Nat: '+d.nat:'',d.lang?'Lang: '+d.lang:''].filter(Boolean))ly=ti(p,lx,ly,lw)+1;
+  ly+=2;
+
+  if(d.skills){ly=ts('SKILLS',lx,ly,lw);
+    const sk=d.skills.split(',').map(s=>s.trim()).filter(Boolean);
+    sk.forEach(s=>{const sw=doc.getTextWidth(s)+6;if(true){doc.setFillColor(204,251,241);doc.roundedRect(lx+2,ly-3.5,sw,6,1.5,1.5,'F');doc.setTextColor(15,118,110);doc.setFontSize(7);doc.text(s,lx+5,ly);ly+=7;}});
+    ly+=2;
+  }
+
+  let my=Math.max(ly,ry)+4;
+  if(d.exp){my=ts('WORK EXPERIENCE',lx,my,W-26);doc.setTextColor(55,65,81);doc.setFontSize(8);doc.setFont('helvetica','normal');for(const l of d.exp.split('\n').filter(Boolean))my=wt(doc,'▪ '+l.trim(),lx+2,my,W-26,4.5)+1;my+=3;}
+  if(d.cert){my=ts('CERTIFICATIONS',lx,my,W-26);for(const l of d.cert.split('\n').filter(Boolean)){doc.setTextColor(55,65,81);doc.setFontSize(8);doc.setFont('helvetica','normal');my=wt(doc,'▪ '+l.trim(),lx+2,my,W-26,4.5)+1;}my+=3;}
+  if(d.hobbies){my=ts('HOBBIES & INTERESTS',lx,my,W-26);doc.setTextColor(55,65,81);doc.setFontSize(8);doc.setFont('helvetica','normal');my=wt(doc,d.hobbies,lx+2,my,W-26,4.5)+3;}
+  my=ts('DECLARATION',lx,my,W-26);
+  doc.setTextColor(55,65,81);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text('I hereby declare that all information is true to the best of my knowledge.',lx+2,my,{maxWidth:W-26});my+=8;
+  doc.text('Date: ___________',lx,my);doc.text('Signature: _______________',W-65,my);
+}
+
+// ─── Template 4: Minimal Pro ──────────────────────────────────────────────────
+async function tpl4(doc, d) {
+  const W=210;
+  doc.setFillColor(37,99,235);doc.rect(0,0,W,7,'F');
+  let y=18;
+  if(d.photo){try{doc.addImage(d.photo,'JPEG',W-55,10,42,52);doc.setDrawColor(37,99,235);doc.setLineWidth(.5);doc.rect(W-55,10,42,52);}catch{}}
+  doc.setTextColor(17,24,39);doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text(d.name,14,y);y+=7;
+  doc.setTextColor(37,99,235);doc.setFontSize(9.5);doc.setFont('helvetica','bold');if(d.jobtitle)doc.text(d.jobtitle,14,y);y+=6;
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);doc.text([d.phone,d.email,d.addr?d.addr.split('\n')[0]:''].filter(Boolean).join('  |  '),14,y);y+=9;
+  function ms(t,yy){ doc.setTextColor(17,24,39);doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.text(t.toUpperCase(),14,yy);yy+=1.5;doc.setDrawColor(37,99,235);doc.setLineWidth(.5);doc.line(14,yy,W-14,yy);return yy+4.5; }
+  function mi(t,yy){ doc.setTextColor(55,65,81);doc.setFontSize(8.5);doc.setFont('helvetica','normal');const ls=doc.splitTextToSize(t,W-28);doc.text(ls,14,yy);return yy+ls.length*4.5; }
+  if(d.obj){y=ms('Objective',y);y=mi(d.obj,y)+4;}
+  y=ms('Education',y);
+  for(const r of eduRow(d)){y=mi(`▪ ${r.name}${r.board?' — '+r.board:''}${r.year?' ('+r.year+')':''}${r.pct?' — '+r.pct:''}${r.div?' ['+r.div+']':''}`,y)+1;}
+  y+=2;
+  if(d.exp){y=ms('Work Experience',y);for(const l of d.exp.split('\n').filter(Boolean))y=mi('▪ '+l.trim(),y)+1;y+=3;}
+  if(d.skills){y=ms('Skills',y);y=mi(d.skills.split(',').map(s=>'• '+s.trim()).join('   '),y)+4;}
+  if(d.cert){y=ms('Certifications',y);for(const l of d.cert.split('\n').filter(Boolean))y=mi('▪ '+l.trim(),y)+1;y+=3;}
+  y=ms('Personal Details',y);
+  for(const p of [d.father?'Father: '+d.father:'',d.dob?'DOB: '+d.dob:'',d.gender?'Gender: '+d.gender:'',d.marital?'Marital: '+d.marital:'','Nationality: '+d.nat,'Languages: '+d.lang,'Address: '+d.addr].filter(Boolean))y=mi(p,y)+1;
+  if(d.hobbies){y+=2;y=ms('Hobbies & Interests',y);y=mi(d.hobbies,y)+3;}
+  y+=4;doc.setFontSize(7.5);doc.setFont('helvetica','italic');doc.setTextColor(148,163,184);doc.text('I declare all information above is true to the best of my knowledge.',14,y);y+=5;
+  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(55,65,81);doc.text('Date: ___________',14,y);doc.text('Signature: _______________',W-65,y);
+}
+
+// ─── Template 5: Vibrant Orange Sidebar ───────────────────────────────────────
+async function tpl5(doc, d) {
+  const W=210,H=297,SW=70,MX=75;
+  doc.setFillColor(234,88,12);doc.rect(0,0,SW,H,'F');
+  if(d.photo){try{doc.addImage(d.photo,'JPEG',8,10,52,65);doc.setDrawColor(255,255,255);doc.setLineWidth(1);doc.rect(8,10,52,65);}catch{}}
+  else{doc.setFillColor(200,60,5);doc.roundedRect(8,10,52,65,3,3,'F');}
+  doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');let nn=doc.splitTextToSize(d.name,56);doc.text(nn,SW/2,84,{align:'center'});
+  let sy=84+(nn.length*5.5);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(255,210,180);if(d.jobtitle){doc.text(d.jobtitle,SW/2,sy,{align:'center'});sy+=5;}
+  doc.setDrawColor(255,150,80);doc.setLineWidth(.3);doc.line(6,sy,SW-4,sy);sy+=4;
+  function ss(t,lines){doc.setTextColor(255,200,150);doc.setFontSize(6);doc.setFont('helvetica','bold');doc.text(t.toUpperCase(),6,sy);sy+=4;doc.setTextColor(255,240,225);doc.setFontSize(7.5);doc.setFont('helvetica','normal');for(const l of lines){if(!l)continue;const ls=doc.splitTextToSize(l,60);doc.text(ls,6,sy);sy+=ls.length*4;}sy+=2;}
+  ss('CONTACT',[d.phone?'📞 '+d.phone:'',d.email||'',d.addr?d.addr.split('\n')[0]:''].filter(Boolean));
+  if(d.skills)ss('SKILLS',d.skills.split(',').map(s=>'• '+s.trim()).slice(0,7));
+  ss('PERSONAL',[d.father?'F/O: '+d.father:'',d.dob?'DOB: '+d.dob:'',d.gender?'G: '+d.gender:'',d.marital?'M: '+d.marital:'',d.nat||'Indian','Lang: '+d.lang].filter(Boolean));
+
+  let my=13;
+  function ms(t,y){doc.setTextColor(234,88,12);doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(t,MX,y);y+=1.5;doc.setDrawColor(234,88,12);doc.setLineWidth(.4);doc.line(MX,y,W-10,y);return y+5;}
+  function mi(t,y){doc.setTextColor(55,65,81);doc.setFontSize(8.5);doc.setFont('helvetica','normal');const ls=doc.splitTextToSize('▪ '+t,W-MX-12);doc.text(ls,MX+2,y);return y+ls.length*4.5;}
+  if(d.obj){my=ms('CAREER OBJECTIVE',my);my=wt(doc,d.obj,MX+2,my,W-MX-12,4.5)+3;}
+  my=ms('EDUCATIONAL QUALIFICATION',my);
+  const rows=eduRow(d);
+  doc.setFillColor(255,237,213);doc.rect(MX,my-1,W-MX-8,7,'F');
+  doc.setTextColor(154,52,18);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.text('Examination',MX+2,my+4);doc.text('Board',MX+40,my+4);doc.text('Year',MX+75,my+4);doc.text('Div',MX+87,my+4);doc.text('%',MX+99,my+4);
+  my+=7;
+  rows.forEach((r,i)=>{if(i%2===0){doc.setFillColor(255,247,237);doc.rect(MX,my-1,W-MX-8,6,'F');}doc.setTextColor(55,65,81);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text(r.name||'',MX+2,my+3,{maxWidth:35});doc.text(r.board||'',MX+40,my+3,{maxWidth:32});doc.text(r.year||'',MX+75,my+3);doc.text(r.div||'',MX+87,my+3);doc.text(r.pct||'',MX+99,my+3);my+=6;});
+  my+=2;
+  if(d.exp){my=ms('WORK EXPERIENCE',my);for(const l of d.exp.split('\n').filter(Boolean))my=mi(l.trim(),my)+1;my+=3;}
+  if(d.cert){my=ms('CERTIFICATIONS / AWARDS',my);for(const l of d.cert.split('\n').filter(Boolean))my=mi(l.trim(),my)+1;my+=3;}
+  if(d.hobbies){my=ms('HOBBIES & INTERESTS',my);my=wt(doc,d.hobbies,MX+2,my,W-MX-12,4.5)+3;}
+  my=ms('DECLARATION',my);doc.setTextColor(55,65,81);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text('I declare all information is true to the best of my knowledge.',MX+2,my,{maxWidth:W-MX-12});my+=8;doc.text('Date: ___________',MX,my);doc.text('Signature: _______________',MX+50,my);
+}
+
+// ─── Template 6: Shop Classic (table-style, matches your existing templates) ──
+async function tpl6(doc, d) {
+  const W=210;
+  doc.setFillColor(17,24,39);doc.rect(0,0,W,10,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('RESUME',W/2,7,{align:'center'});
+  doc.setFillColor(255,255,255);doc.rect(0,10,W,H-10,'F');
+  let y=20;
+  if(d.photo){try{doc.addImage(d.photo,'JPEG',W-55,12,42,52);doc.setDrawColor(17,24,39);doc.setLineWidth(.5);doc.rect(W-55,12,42,52);}catch{}}
+  // Name block
+  doc.setTextColor(17,24,39);doc.setFontSize(15);doc.setFont('helvetica','bold');doc.text(d.name,W/2,y,{align:'center'});y+=7;
+  if(d.jobtitle){doc.setFontSize(9.5);doc.setTextColor(55,65,81);doc.text(d.jobtitle,W/2,y,{align:'center'});y+=5;}
+  doc.setDrawColor(17,24,39);doc.setLineWidth(.4);doc.line(12,y,W-12,y);y+=5;
+  // Personal info grid
+  const pis=[['Father\'s Name',d.father],['Date of Birth',d.dob],['Gender',d.gender],['Marital Status',d.marital],['Nationality',d.nat||'Indian'],['Language Known',d.lang||'Hindi, English'],['Contact No.',d.phone],['Email ID',d.email],['Address',d.addr]].filter(r=>r[1]);
+  doc.setFontSize(8.5);
+  for(let i=0;i<pis.length;i++){
+    const [lbl,val]=pis[i];
+    doc.setFont('helvetica','bold');doc.setTextColor(17,24,39);doc.text(lbl+' :',14,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(55,65,81);const ls=doc.splitTextToSize(val,W-80);doc.text(ls,80,y);y+=ls.length*5;
+  }
+  y+=3;doc.setDrawColor(17,24,39);doc.setLineWidth(.4);doc.line(12,y,W-12,y);y+=5;
+  // Education section heading
+  doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(17,24,39);doc.text('EDUCATIONAL QUALIFICATION :',W/2,y,{align:'center'});y+=4;
+  // Table
+  const rows=eduRow(d);
+  doc.setFillColor(17,24,39);doc.rect(12,y,W-24,8,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  const cols=[12,75,135,158,172];const headers=['Name of Exam','Board/University','Year of Passing','Division','Percentage'];
+  headers.forEach((h,i)=>doc.text(h,cols[i]+2,y+5));y+=8;
+  rows.forEach((r,i)=>{
+    if(i%2===0){doc.setFillColor(243,244,246);}else{doc.setFillColor(255,255,255);}
+    doc.rect(12,y,W-24,8,'F');
+    doc.setTextColor(55,65,81);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(r.name||'',cols[0]+2,y+5,{maxWidth:60});doc.text(r.board||'',cols[1]+2,y+5,{maxWidth:55});doc.text(r.year||'',cols[2]+2,y+5);doc.text(r.div||'',cols[3]+2,y+5);doc.text(r.pct||'',cols[4]+2,y+5);
+    y+=8;
+  });
+  y+=4;doc.setDrawColor(17,24,39);doc.setLineWidth(.3);doc.line(12,y,W-12,y);y+=5;
+  function s6s(t,yy){doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(17,24,39);doc.text(t,W/2,yy,{align:'center'});yy+=4;doc.setDrawColor(17,24,39);doc.setLineWidth(.3);doc.line(12,yy,W-12,yy);return yy+4;}
+  function s6i(t,yy){doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(55,65,81);const ls=doc.splitTextToSize(t,W-28);doc.text(ls,18,yy);return yy+ls.length*4.8;}
+  if(d.obj){y=s6s('Professional Summary',y);y=s6i(d.obj,y)+4;}
+  if(d.exp){y=s6s('Experience / Education',y);for(const l of d.exp.split('\n').filter(Boolean))y=s6i('▪ '+l.trim(),y)+1;y+=3;}
+  if(d.skills){y=s6s('Skills',y);y=s6i(d.skills,y)+3;}
+  if(d.cert){y=s6s('Certifications / Extra Qualifications',y);for(const l of d.cert.split('\n').filter(Boolean))y=s6i('▪ '+l.trim(),y)+1;y+=3;}
+  if(d.hobbies){y=s6s('Interests and Strengths',y);y=s6i(d.hobbies,y)+3;}
+  y=s6s('DECLARATION',y);y=s6i('I hereby declare that the information given above is correct and true in my best of knowledge.',y)+6;
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(55,65,81);
+  doc.text('Date:',14,y);doc.text('Place: '+d.addr.split(',')[0],50,y);doc.text('(Signature of Candidate)',W-55,y);
+  doc.setFillColor(17,24,39);doc.rect(0,H-10,W,10,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text('Developed by Rupesh Kumar Mahato | QR Se Resume',W/2,H-3.5,{align:'center'});
+}
+
+// ════════════════════════════════════════════════
+// COLOR SELECT
+// ════════════════════════════════════════════════
+function selColor(m) {
+  selColorMode = m;
+  document.getElementById('co_bw').classList.toggle('sel',m==='bw');
+  document.getElementById('co_clr').classList.toggle('sel',m==='color');
+  updatePriceDisplay();
+}
+function updatePriceDisplay() {
+  const p = selColorMode==='bw' ? shopData.price_bw : shopData.price_color;
+  document.getElementById('pprice').textContent='₹'+p;
+  document.getElementById('ptotal').textContent='₹'+p;
+}
+
+// ════════════════════════════════════════════════
+// PAYMENT
+// ════════════════════════════════════════════════
+async function uploadAndCreateJob() {
+  if (!pdfBlob) { toast('Resume pehle generate karo!'); return null; }
+  showLoad('📤 Resume upload ho raha hai...');
+  try {
+    const fd = new FormData();
+    fd.append('file', new File([pdfBlob],'resume_'+Date.now()+'.pdf',{type:'application/pdf'}));
+    fd.append('shopId', SHOP_ID);
+    fd.append('colorMode', selColorMode);
+    fd.append('customerName', gv('f_name'));
+    const r = await fetch('/api/upload',{method:'POST',body:fd});
+    const data = await r.json();
+    if (!data.jobId) throw new Error(data.error||'Upload failed');
+    jobId = data.jobId;
+    return data.jobId;
+  } catch(e) { hideLoad(); toast('❌ '+e.message); return null; }
+}
+
+async function payOnline() {
+  const jid = await uploadAndCreateJob(); if (!jid) return;
+  showLoad('💳 Payment window...');
+  try {
+    const or = await fetch('/api/payment/razorpay/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:jid})});
+    const od = await or.json();
+    if (!od.orderId) throw new Error(od.error||'Order failed');
+    hideLoad();
+    new Razorpay({
+      key:od.keyId, amount:od.amount, currency:'INR',
+      name:'QR Se Resume Banao', description:'Resume Print',
+      order_id:od.orderId,
+      handler: async function(resp) {
+        showLoad('✅ Verifying...');
+        const vr = await fetch('/api/payment/razorpay/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...resp,jobId:jid})});
+        const vd = await vr.json();
+        hideLoad();
+        if (vd.success) showSuccess('online',jid,od.amount/100);
+        else toast('❌ Verification failed');
+      },
+      theme:{color:'#2563eb'}
+    }).open();
+  } catch(e){hideLoad();toast('❌ '+e.message);}
+}
+
+async function payCounter() {
+  const jid = await uploadAndCreateJob(); if (!jid) return;
+  showLoad('🏪 Counter payment...');
+  try {
+    const r=await fetch('/api/payment/counter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:jid})});
+    const data=await r.json(); hideLoad();
+    if(data.success) showSuccess('counter',jid,data.amount);
+    else toast('❌ '+data.error);
+  } catch(e){hideLoad();toast('❌ '+e.message);}
+}
+
+function showSuccess(method,jid,amount) {
+  ['sec1','sec2','sec3','sec4'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  const s=document.getElementById('success'); s.style.display='block';
+  const icon=document.getElementById('sIcon'),box=document.getElementById('sBox');
+  if(method==='online'){icon.textContent='✅';icon.style.background='linear-gradient(135deg,#16a34a,#4ade80)';document.getElementById('sTitle').textContent='Payment Ho Gaya!';box.className='s-box online';document.getElementById('sBoxTitle').textContent='🖨️ Printing Shuru!';document.getElementById('sBoxMsg').textContent='Aapka resume automatically print ho raha hai. Thodi der mein ready milega. 🎉';}
+  else{icon.textContent='🏪';icon.style.background='linear-gradient(135deg,#d97706,#fcd34d)';document.getElementById('sTitle').textContent='Queue Mein Hai!';box.className='s-box counter';document.getElementById('sBoxTitle').textContent='Counter Pe Paise Dein';document.getElementById('sBoxMsg').textContent='Dukaan ke counter pe ₹'+amount+' dein. Resume tab print hoga. Dhanyawad! 🙏';}
+  document.getElementById('sOid').textContent='ORDER: '+jid;
+  document.getElementById('sAmt').textContent='₹'+amount;
+  for(let i=1;i<=4;i++){const st=document.getElementById('s'+i);st.querySelector('.dot').textContent='✓';st.className='step done';}
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+function showLoad(t){document.getElementById('loadTxt').textContent=t||'';document.getElementById('loading').classList.add('show');}
+function hideLoad(){document.getElementById('loading').classList.remove('show');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+const H=297;
+
+init();
+</script>
+</body>
+</html>

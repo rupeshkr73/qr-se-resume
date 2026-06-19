@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Se Resume — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f6f8fc;--white:#fff;--border:#e8ecf4;
+  --text:#0d1b2a;--muted:#7a869a;
+  --primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#eff4ff;
+  --green:#16a34a;--green-light:#f0fdf4;
+  --amber:#d97706;--amber-light:#fffbeb;
+  --red:#dc2626;--red-light:#fef2f2;
+  --purple:#7c3aed;--purple-light:#f5f3ff;
+  --radius:12px;--radius-lg:18px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:38px;height:38px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.brand-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:17px;font-weight:800;color:var(--text)}
+.brand-tag{font-size:11px;font-weight:500;color:var(--muted);margin-top:1px}
+.topbar-nav{display:flex;gap:8px}
+.nav-btn{padding:7px 16px;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.nav-active{background:var(--primary-light);color:var(--primary)}
+.nav-plain{background:transparent;color:var(--muted)}
+.nav-plain:hover{background:var(--bg)}
+
+/* ── LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+
+/* ── HERO STAT ROW ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px}
+.stat-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:800;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.stat-card.accent{background:linear-gradient(135deg,#2563eb,#7c3aed);border-color:transparent}
+.stat-card.accent .stat-label,.stat-card.accent .stat-val,.stat-card.accent .stat-sub{color:#fff}
+.stat-card.accent .stat-label{opacity:.7}
+.stat-card.accent .stat-sub{opacity:.6}
+
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+
+/* ── CARD ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:15px;font-weight:700;color:var(--text)}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card-body{padding:22px}
+
+/* ── SHOP LIST ── */
+.shop-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.shop-item:last-child{border:none}
+.shop-info{display:flex;align-items:center;gap:12px}
+.shop-avatar{width:40px;height:40px;background:var(--primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.shop-name{font-size:14px;font-weight:600;color:var(--text)}
+.shop-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.shop-actions{display:flex;gap:8px}
+.btn-sm{padding:6px 14px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{background:var(--bg)}
+.btn-danger{background:var(--red-light);color:var(--red);border:none}
+.btn-danger:hover{background:#fecaca}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-light);color:var(--green)}
+.badge-blue{background:var(--primary-light);color:var(--primary)}
+
+/* ── CREATE SHOP FORM ── */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px}
+.form-control{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;transition:.2s;background:var(--white)}
+.form-control:focus{border-color:var(--primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-create{width:100%;padding:12px;border-radius:var(--radius);border:none;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:.2s;margin-top:4px}
+.btn-create:hover{opacity:.9;transform:translateY(-1px)}
+
+/* ── QR MODAL ── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(13,27,42,.6);z-index:200;align-items:center;justify-content:center}
+.modal-backdrop.show{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);padding:32px;max-width:420px;width:90%;text-align:center}
+.modal h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:20px}
+.qr-img{width:200px;height:200px;border:3px solid var(--primary);border-radius:12px;padding:4px;margin:0 auto 16px}
+.qr-url{background:var(--bg);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:16px;border:1px solid var(--border)}
+.modal-btns{display:flex;gap:10px;justify-content:center}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+.modal-wrap{position:relative}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:14px;font-weight:500}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#0d1b2a;color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;z-index:300;transition:.3s cubic-bezier(.175,.885,.32,1.275)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ─ AGENT CONFIG BOX ─ */
+.agent-box{background:var(--bg);border-radius:var(--radius);padding:16px;border:1px dashed #c7d2e0}
+.agent-box h4{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.agent-box code{display:block;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11.5px;color:var(--primary);margin-top:6px;word-break:break-all;cursor:pointer}
+.agent-box code:hover{background:var(--primary-light)}
+
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}.stat-row{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.stat-row{grid-template-columns:1fr}.topbar-nav{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">📄</div>
+    <div>
+      <div class="brand-name">QR Se Resume</div>
+      <div class="brand-tag">Admin Dashboard</div>
+    </div>
+  </div>
+  <div class="topbar-nav">
+    <button class="nav-btn nav-active">🏪 Shops</button>
+    <button class="nav-btn nav-plain" onclick="window.location='/'">🏠 Home</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stat-row">
+    <div class="stat-card accent">
+      <div class="stat-label">Total Shops</div>
+      <div class="stat-val" id="totalShops">—</div>
+      <div class="stat-sub">Registered locations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Resumes</div>
+      <div class="stat-val" id="totalOrders">—</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Earnings</div>
+      <div class="stat-val" id="totalEarnings">—</div>
+      <div class="stat-sub">All time revenue</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Today's Earnings</div>
+      <div class="stat-val" id="todayEarnings">—</div>
+      <div class="stat-sub">Today's revenue</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Shop List -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🏪 All Shops</div>
+          <div class="card-sub">Manage your resume print locations</div>
+        </div>
+        <button class="btn-sm btn-primary" onclick="document.getElementById('createSection').scrollIntoView({behavior:'smooth'})">
+          + New Shop
+        </button>
+      </div>
+      <div class="card-body" id="shopList">
+        <div class="empty"><div class="empty-icon">🏪</div><div class="empty-text">Loading shops...</div></div>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Create Shop -->
+      <div class="card" id="createSection">
+        <div class="card-header">
+          <div>
+            <div class="card-title">✨ Register New Shop</div>
+            <div class="card-sub">Creates unique QR code for the shop</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Shop Name *</label>
+            <input type="text" class="form-control" id="newName" placeholder="Jaise: Mahato Net Cafe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" class="form-control" id="newAddr" placeholder="Shop ka address">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-control" id="newPhone" placeholder="9876543210">
+            </div>
+            <div></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">B&W Price (₹)</label>
+              <input type="number" class="form-control" id="newBW" value="20">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Color Price (₹)</label>
+              <input type="number" class="form-control" id="newColor" value="30">
+            </div>
+          </div>
+          <button class="btn-create" onclick="createShop()">🏪 Register Shop & Get QR</button>
+        </div>
+      </div>
+
+      <!-- Agent Config -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🤖 Print Agent Config</div>
+        </div>
+        <div class="card-body">
+          <div class="agent-box">
+            <h4>📋 print_agent.py mein update karo:</h4>
+            <p style="font-size:12px;color:var(--muted);margin-top:4px">
+              Shop register karne ke baad us shop ka ID copy karo aur
+              <code>print_agent.py</code> mein <strong>SHOP_ID</strong> replace karo.
+            </p>
+            <code onclick="copyText(this)" title="Click to copy">SERVER_URL = "https://qr-se-resume.onrender.com"</code>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-backdrop" id="qrModal">
+  <div class="modal modal-wrap">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>🎉 Shop Registered!</h2>
+    <p id="modalShopName">QR code ready hai. Download karke print karo.</p>
+    <img id="modalQR" class="qr-img" src="" alt="QR Code">
+    <div class="qr-url" id="modalUrl"></div>
+    <div class="modal-btns">
+      <button class="btn-sm btn-primary" onclick="downloadQR()">⬇ Download QR</button>
+      <button class="btn-sm btn-outline" onclick="copyUrl()">📋 Copy URL</button>
+      <button class="btn-sm btn-outline" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentQRData = null;
+
+async function loadDashboard() {
+  try {
+    const [shopsRes] = await Promise.all([
+      fetch('/api/shops')
+    ]);
+    const shops = await shopsRes.json();
+
+    document.getElementById('totalShops').textContent = shops.length;
+
+    // Aggregate stats (simplified — per shop stats would need N calls)
+    let totalOrders = 0, totalEarnings = 0, todayEarnings = 0;
+    for (const shop of shops) {
+      try {
+        const s = await fetch('/api/shop/' + shop.id + '/stats').then(r => r.json());
+        totalOrders   += parseInt(s.total_orders   || 0);
+        totalEarnings += parseInt(s.total_earnings || 0);
+        todayEarnings += parseInt(s.today_earnings || 0);
+      } catch {}
+    }
+    document.getElementById('totalOrders').textContent   = totalOrders;
+    document.getElementById('totalEarnings').textContent = '₹' + totalEarnings;
+    document.getElementById('todayEarnings').textContent = '₹' + todayEarnings;
+
+    renderShopList(shops);
+  } catch (e) {
+    console.error(e);
+    toast('❌ Server se data nahi aaya');
+  }
+}
+
+function renderShopList(shops) {
+  const el = document.getElementById('shopList');
+  if (!shops.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div class="empty-text">Koi shop registered nahi — naya banao!</div></div>';
+    return;
+  }
+  el.innerHTML = shops.map(s => `
+    <div class="shop-item">
+      <div class="shop-info">
+        <div class="shop-avatar">🏪</div>
+        <div>
+          <div class="shop-name">${esc(s.name)}</div>
+          <div class="shop-meta">
+            <span class="badge badge-blue">${esc(s.id)}</span>
+            &nbsp;B&W ₹${s.price_bw} | Color ₹${s.price_color}
+          </div>
+          <div class="shop-meta" style="margin-top:4px">${esc(s.address || '—')} ${s.phone ? '· ' + esc(s.phone) : ''}</div>
+        </div>
+      </div>
+      <div class="shop-actions">
+        <button class="btn-sm btn-outline" onclick='showQR(${JSON.stringify(s)})'>📱 QR</button>
+        <button class="btn-sm btn-primary" onclick="window.open('/resume/${s.id}','_blank')">Preview</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function createShop() {
+  const name  = document.getElementById('newName').value.trim();
+  const addr  = document.getElementById('newAddr').value.trim();
+  const phone = document.getElementById('newPhone').value.trim();
+  const bw    = parseInt(document.getElementById('newBW').value) || 20;
+  const color = parseInt(document.getElementById('newColor').value) || 30;
+
+  if (!name) { toast('❌ Shop name zaroori hai'); return; }
+
+  try {
+    toast('⏳ Registering...');
+    const res  = await fetch('/api/shop/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, address: addr, phone, price_bw: bw, price_color: color })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    currentQRData = data;
+    document.getElementById('modalShopName').textContent = name + ' — ' + data.shopId;
+    document.getElementById('modalQR').src = data.qrCode;
+    document.getElementById('modalUrl').textContent = data.qrUrl;
+    document.getElementById('qrModal').classList.add('show');
+    toast('✅ Shop registered!');
+    loadDashboard();
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+function showQR(shop) {
+  currentQRData = { qrCode: shop.qr_code, qrUrl: `${window.location.origin}/resume/${shop.id}` };
+  document.getElementById('modalShopName').textContent = shop.name + ' — ' + shop.id;
+  document.getElementById('modalQR').src = shop.qr_code || '';
+  document.getElementById('modalUrl').textContent = currentQRData.qrUrl;
+  document.getElementById('qrModal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('qrModal').classList.remove('show'); }
+
+function downloadQR() {
+  if (!currentQRData?.qrCode) return;
+  const a = document.createElement('a');
+  a.href = currentQRData.qrCode;
+  a.download = 'qr-se-resume-qr.png';
+  a.click();
+}
+
+function copyUrl() {
+  navigator.clipboard.writeText(currentQRData?.qrUrl || '').then(() => toast('📋 URL copied!'));
+}
+
+function copyText(el) {
+  navigator.clipboard.writeText(el.textContent).then(() => toast('📋 Copied!'));
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+window.addEventListener('click', e => {
+  if (e.target.id === 'qrModal') closeModal();
+});
+
+loadDashboard();
+</script>
+</body>
+</html>
