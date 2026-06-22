@@ -236,6 +236,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<!-- Edit Price Modal -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal modal-wrap">
+    <button class="modal-close" onclick="closeEditModal()">✕</button>
+    <h2>✏️ Rate Update Karo</h2>
+    <p id="editShopName">Shop ka naam</p>
+    <input type="hidden" id="editShopId">
+    <div style="margin-bottom:14px">
+      <label class="form-label">⬛ B&W Print Rate (₹)</label>
+      <input type="number" class="form-control" id="editBW" placeholder="10">
+    </div>
+    <div style="margin-bottom:20px">
+      <label class="form-label">🎨 Color Print Rate (₹)</label>
+      <input type="number" class="form-control" id="editColor" placeholder="20">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-sm btn-primary" onclick="savePrice()" style="padding:10px 24px;font-size:14px">💾 Save Karo</button>
+      <button class="btn-sm btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- QR Modal -->
 <div class="modal-backdrop" id="qrModal">
   <div class="modal modal-wrap">
@@ -308,6 +330,7 @@ function renderShopList(shops) {
       </div>
       <div class="shop-actions">
         <button class="btn-sm btn-outline" onclick='showQR(${JSON.stringify(s)})'>📱 QR</button>
+        <button class="btn-sm btn-outline" onclick='openEditPrice(${JSON.stringify(s)})'>✏️ Rate</button>
         <button class="btn-sm btn-primary" onclick="window.open('/resume/${s.id}','_blank')">Preview</button>
       </div>
     </div>
@@ -341,6 +364,37 @@ async function createShop() {
     toast('✅ Shop registered!');
     loadDashboard();
   } catch (e) { toast('❌ ' + e.message); }
+}
+
+function openEditPrice(shop) {
+  document.getElementById('editShopId').value   = shop.id;
+  document.getElementById('editShopName').textContent = shop.name + ' — ' + shop.id;
+  document.getElementById('editBW').value        = shop.price_bw;
+  document.getElementById('editColor').value     = shop.price_color;
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+}
+
+async function savePrice() {
+  const shopId = document.getElementById('editShopId').value;
+  const bw     = parseInt(document.getElementById('editBW').value);
+  const color  = parseInt(document.getElementById('editColor').value);
+  if (!bw || !color) { toast('❌ Dono rate likhein!'); return; }
+  try {
+    const res  = await fetch('/api/shop/update-price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shopId, price_bw: bw, price_color: color })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Update failed');
+    toast('✅ Rate update ho gaya! B&W ₹' + bw + ' | Color ₹' + color);
+    closeEditModal();
+    loadDashboard();
+  } catch(e) { toast('❌ ' + e.message); }
 }
 
 function showQR(shop) {
@@ -380,7 +434,8 @@ function toast(msg) {
 }
 
 window.addEventListener('click', e => {
-  if (e.target.id === 'qrModal') closeModal();
+  if (e.target.id === 'qrModal')   closeModal();
+  if (e.target.id === 'editModal') closeEditModal();
 });
 
 loadDashboard();
