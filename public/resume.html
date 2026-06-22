@@ -538,7 +538,8 @@ textarea.fi{resize:vertical;min-height:65px}
   <div class="s-oid" id="sOid">ORDER-XXXXXX</div>
   <div class="s-box" id="sBox"><h4 id="sBoxT">...</h4><p id="sBoxM">...</p></div>
   <div class="amt-box"><span>Amount</span><strong id="sAmt">₹20</strong></div>
-  <button class="btn btn-p" style="margin-top:12px" onclick="location.reload()">🔄 Naya Resume Banao</button>
+  <button class="btn btn-p" style="margin-top:12px" onclick="downloadPDF()">⬇️ Resume PDF Download Karo</button>
+  <button class="btn btn-b" style="margin-top:6px" onclick="location.reload()">🔄 Naya Resume Banao</button>
 </div>
 
 <!-- Footer -->
@@ -1349,6 +1350,20 @@ function showSuccess(method,jid,amount){
 // ══════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════
+function downloadPDF() {
+  if (!pdfBlob) { toast('PDF available nahi hai!'); return; }
+  const name = (document.getElementById('f_name')?.value || 'Resume').trim().replace(/\s+/g,'_');
+  const url  = URL.createObjectURL(pdfBlob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = name + '_Resume.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  toast('📥 PDF download shuru ho gaya!');
+}
+
 function showLoad(t){document.getElementById('loadT').textContent=t||'';document.getElementById('loading').classList.add('show');}
 function hideLoad(){document.getElementById('loading').classList.remove('show');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
