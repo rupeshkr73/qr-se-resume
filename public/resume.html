@@ -479,7 +479,22 @@ textarea.fi{resize:vertical;min-height:65px}
       <div style="font-size:12px;font-weight:600;color:var(--text)">Passport Photo Select Karein</div>
       <div style="font-size:10px;color:var(--muted);margin-top:3px">JPG / PNG — 35×45mm size best</div>
     </div>
-    <div style="height:12px"></div>
+    <div style="height:14px"></div>
+    <div style="background:#f8faff;border-radius:10px;padding:13px;border:1px solid var(--border);margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">✍️ Declaration Details</div>
+      <div class="fg">
+        <div class="fl">📅 Date</div>
+        <input type="date" class="fi" id="f_decdate">
+      </div>
+      <div class="fg">
+        <div class="fl">📍 Place</div>
+        <input type="text" class="fi" id="f_place" placeholder="Jaise: Dhanbad / Baliapur / Khowai">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <div class="fl">✍️ Signature (apna naam likhein)</div>
+        <input type="text" class="fi" id="f_sign" placeholder="Jaise: Rajkishor Kumar Mahato">
+      </div>
+    </div>
     <button class="btn btn-p" onclick="genPDF()">✨ Resume Banao & Preview Dekho</button>
     <button class="btn btn-b" onclick="prv('E')">← Wapas</button>
   </div>
@@ -749,9 +764,12 @@ function collect() {
     skills:  gv('f_skills'),
     exp:     gv('f_exp'),
     cert:    gv('f_cert'),
-    hobbies: gv('f_hobbies'),
-    photo:   photoURL,
-    tpl:     selTplId
+    hobbies:  gv('f_hobbies'),
+    decdate:  gv('f_decdate'),
+    place:    gv('f_place'),
+    sign:     gv('f_sign'),
+    photo:    photoURL,
+    tpl:      selTplId
   };
 }
 
@@ -936,9 +954,9 @@ async function buildT1(doc,d){
   doc.text('I hereby declare that all the information furnished above is true to the best of my knowledge.',M,y,{maxWidth:W-M*2});
   y+=10;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
-  doc.text('Date:',M,y);
-  doc.text('Place: '+d.addr.split(',')[0],M+35,y);
-  doc.text(d.name,W-M,y,{align:'right'});
+  doc.text('Date: '+(d.decdate||'___________'),M,y);
+  doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);
+  doc.text('Sign: '+(d.sign||d.name),W-M,y,{align:'right'});
   doc.setLineWidth(.5);doc.line(M,H-8,W-M,H-8);
 }
 
@@ -1014,7 +1032,7 @@ async function buildT2(doc,d){
   doc.setDrawColor(30,58,95);doc.setLineWidth(.3);doc.line(M,y,W-M,y);y+=4;
   doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
   doc.text('I hereby declare that all the information furnished above is true to the best of my knowledge.',M,y,{maxWidth:W-M*2});y+=8;
-  doc.text('Date:',M,y);doc.text('Place: '+d.addr.split(',')[0],M+30,y);doc.text(d.name,W-M,y,{align:'right'});
+  doc.text('Date: '+(d.decdate||'___________'),M,y);doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);doc.text('Sign: '+(d.sign||d.name),W-M,y,{align:'right'});
   doc.setFillColor(30,58,95);doc.rect(0,H-8,W,8,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
   doc.text('Developed by Rupesh Kumar Mahato | QR Se Resume Banao',W/2,H-2.5,{align:'center'});
@@ -1086,7 +1104,7 @@ async function buildT3(doc,d){
   my=ms('Declaration',my);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
   doc.text('I hereby declare that all information is true to the best of my knowledge.',MX+2,my,{maxWidth:W-MX-12});my+=7;
-  doc.text('Date: ___________',MX+2,my);doc.text('Sign: _______________',MX+50,my);
+  doc.text('Date: '+(d.decdate||'___________'),MX+2,my);doc.text('Place: '+(d.place||''),MX+50,my);doc.text('Sign: '+(d.sign||d.name),W-8,my,{align:'right'});
 }
 
 // ── TEMPLATE 4: CV Style with border ─────────────────────────────────────────
@@ -1147,7 +1165,7 @@ async function buildT4(doc,d){
   doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(0,0,0);y=wt(doc,d.hobbies||'Listening Music, Browsing Internet, Self Motivation',M+4,y,W-M*2-8,4.5)+4;
   doc.setLineWidth(.3);doc.line(M+4,y,W-M-4,y);y+=4;
   doc.setFontSize(8.5);doc.text('I hereby declare that the information given above is correct and true to the best of my knowledge.',M+4,y,{maxWidth:W-M*2-8});y+=8;
-  doc.text('Date:',M+4,y);doc.text('Place: '+d.addr.split(',')[0],M+35,y);doc.text('('+d.name+')',W-M-4,y,{align:'right'});
+  doc.text('Date: '+(d.decdate||'___________'),M+4,y);doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);doc.text('Sign: '+(d.sign||d.name),W-M-4,y,{align:'right'});
 }
 
 // ── TEMPLATE 5: Green Classic ─────────────────────────────────────────────────
@@ -1190,7 +1208,7 @@ async function buildT5(doc,d){
   y=gs('DECLARATION',y);
   y=gi('I hereby declare that all the information furnished above is true to the best of my knowledge.',y)+5;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
-  doc.text('Date:',M,y);doc.text('Place: '+d.addr.split(',')[0],M+30,y);doc.text(d.name,W-M,y,{align:'right'});
+  doc.text('Date: '+(d.decdate||'___________'),M,y);doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);doc.text('Sign: '+(d.sign||d.name),W-M,y,{align:'right'});
   doc.setFillColor(22,101,52);doc.rect(0,H-8,W,8,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
   doc.text('Developed by Rupesh Kumar Mahato | QR Se Resume Banao',W/2,H-2.5,{align:'center'});
@@ -1244,7 +1262,7 @@ async function buildT6(doc,d){
   my=ms('INTERESTS and STRENGTHS',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);my=wt(doc,d.hobbies||'Listening Music, Browsing Internet, Self Motivation',MX+2,my,W-MX-12,4.3)+3;
   my=ms('Declaration',my);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
   doc.text('I hereby declare that all information is true to the best of my knowledge.',MX+2,my,{maxWidth:W-MX-12});my+=7;
-  doc.text('Date:',MX+2,my);doc.text(d.name,W-8,my,{align:'right'});
+  doc.text('Date: '+(d.decdate||'___________'),MX+2,my);doc.text('Place: '+(d.place||''),MX+45,my);doc.text('Sign: '+(d.sign||d.name),W-8,my,{align:'right'});
 }
 
 // ══════════════════════════════════════════════
