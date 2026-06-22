@@ -79,7 +79,7 @@ async function uploadToCloudinary(fileBuffer) {
     const pid = 'resume_' + uuidv4().replace(/-/g,'').substring(0, 10);
 
     // Signature string — alphabetical order
-    const sigStr = `public_id=${pid}&timestamp=${ts}${CLD_SECRET}`;
+    const sigStr = `public_id=${pid}&resource_type=raw&timestamp=${ts}${CLD_SECRET}`;
     const sig = crypto.createHash('sha256').update(sigStr).digest('hex');
 
     // Build multipart manually
@@ -92,10 +92,11 @@ async function uploadToCloudinary(fileBuffer) {
       );
     }
 
-    addField('api_key',    CLD_KEY);
-    addField('timestamp',  String(ts));
-    addField('public_id',  pid);
-    addField('signature',  sig);
+    addField('api_key',       CLD_KEY);
+    addField('timestamp',     String(ts));
+    addField('public_id',     pid);
+    addField('resource_type', 'raw');
+    addField('signature',     sig);
 
     // File part
     const filePart = Buffer.concat([
@@ -112,7 +113,7 @@ async function uploadToCloudinary(fileBuffer) {
 
     const options = {
       hostname: 'api.cloudinary.com',
-      path: `/v1_1/${CLOUD_NAME}/auto/upload`,
+      path: `/v1_1/${CLOUD_NAME}/raw/upload`,
       method: 'POST',
       headers: {
         'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -156,7 +157,7 @@ async function deleteFromCloudinary(publicId) {
     }).toString();
     const opts = {
       hostname: 'api.cloudinary.com',
-      path: `/v1_1/${CLOUD_NAME}/auto/destroy`,
+      path: `/v1_1/${CLOUD_NAME}/raw/destroy`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
