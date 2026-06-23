@@ -802,23 +802,34 @@ function handleDirect(inp) {
 // Option 2 — Any photo → auto passport size with blue bg
 function handleAuto(inp) {
   if (!inp.files[0]) return;
+  const file = inp.files[0];
   document.getElementById('photoOptions').style.display    = 'none';
   document.getElementById('photoResult').style.display     = 'none';
   document.getElementById('photoProcessing').style.display = 'block';
-  document.getElementById('procTxt').textContent = 'Blue background + passport size ban raha hai...';
+  document.getElementById('procTxt').textContent           = 'Photo process ho raha hai...';
 
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => makePassportPhoto(img);
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(inp.files[0]);
+  // Use createImageBitmap — fastest, no onload issues on mobile
+  createImageBitmap(file).then(bitmap => {
+    makePassportPhoto(bitmap);
+  }).catch(() => {
+    // Fallback for older browsers
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => makePassportPhoto(img);
+      img.onerror = () => {
+        document.getElementById('photoProcessing').style.display = 'none';
+        document.getElementById('photoOptions').style.display    = 'grid';
+        toast('❌ Photo load nahi hua, dobara try karo');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
-function makePassportPhoto(img) {
-  // Small canvas = faster processing (150x193 px — enough for print)
-  const PW = 150, PH = 193;
+function makePassportPhoto(imgSrc) {
+  const PW = 180, PH = 231; // 35x45mm ratio, small = fast
   const canvas = document.getElementById('photoCanvas');
   canvas.width = PW; canvas.height = PH;
   const ctx = canvas.getContext('2d');
@@ -827,22 +838,24 @@ function makePassportPhoto(img) {
   ctx.fillStyle = '#5b9bd5';
   ctx.fillRect(0, 0, PW, PH);
 
-  // Center crop — face bias top
-  const srcR = img.width / img.height;
-  const dstR = PW / PH;
+  // Center crop with face bias
+  const iw = imgSrc.width, ih = imgSrc.height;
+  const srcR = iw / ih, dstR = PW / PH;
   let sx, sy, sw, sh;
   if (srcR > dstR) {
-    sh = img.height; sw = sh * dstR;
-    sx = (img.width - sw) / 2; sy = 0;
+    sh = ih; sw = sh * dstR;
+    sx = (iw - sw) / 2; sy = 0;
   } else {
-    sw = img.width; sh = sw / dstR;
-    sx = 0; sy = Math.max(0, (img.height - sh) * 0.2);
+    sw = iw; sh = sw / dstR;
+    sx = 0; sy = Math.max(0, (ih - sh) * 0.2);
   }
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, PW, PH);
+  ctx.drawImage(imgSrc, sx, sy, sw, sh, 0, 0, PW, PH);
 
-  const result = canvas.toDataURL('image/jpeg', 0.92);
+  // Close bitmap if it is one
+  if (imgSrc.close) imgSrc.close();
+
+  const result = canvas.toDataURL('image/jpeg', 0.9);
   photoURL = result;
-
   document.getElementById('photoProcessing').style.display = 'none';
   showPhotoResult(result, '✅ Auto Passport Photo Ready!', 'Blue background • 35×45mm size');
 }
