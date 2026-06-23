@@ -264,9 +264,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     if (!shopR.rows.length) return res.status(404).json({ error: 'Shop not found' });
     const shop = shopR.rows[0];
 
-    console.log(`📤 Uploading PDF for shop ${shopId}, size: ${req.file.buffer.length} bytes`);
-    const { url, publicId } = await uploadToCloudinary(req.file.buffer);
-
+    // Store PDF as base64 in DB — no Cloudinary needed, no auth issues
+    const base64PDF  = req.file.buffer.toString('base64');
     const finalColor = colorMode === 'color' ? 'color' : 'bw';
     const price      = finalColor === 'color' ? shop.price_color : shop.price_bw;
     const jobId      = 'RJOB_' + uuidv4().substring(0,12).toUpperCase();
@@ -275,10 +274,10 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       `INSERT INTO resume_jobs
         (id,shop_id,customer_name,file_url,file_public_id,color_mode,amount,status,payment_status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,'pending','pending')`,
-      [jobId, shopId, customerName||'Customer', url, publicId, finalColor, price]
+      [jobId, shopId, customerName||'Customer', base64PDF, 'local', finalColor, price]
     );
 
-    console.log(`✅ Job created: ${jobId}`);
+    console.log(`✅ Job created: ${jobId} | Size: ${req.file.buffer.length} bytes`);
     res.json({ success:true, jobId, amount:price });
   } catch(err) {
     console.error('Upload error:', err.message);
@@ -342,7 +341,7 @@ app.post('/api/payment/counter', async (req, res) => {
 app.get('/api/jobs/pending/:shopId', async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT id,customer_name,file_url,file_public_id,color_mode,amount
+      `SELECT id,customer_name,color_mode,amount
        FROM resume_jobs
        WHERE shop_id=$1 AND status='queued' AND payment_status='paid'
        ORDER BY created_at ASC LIMIT 5`,
@@ -352,15 +351,32 @@ app.get('/api/jobs/pending/:shopId', async (req, res) => {
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/jobs/complete/:jobId', async (req, res) => {
+// Agent downloads PDF binary from this route
+app.get('/api/jobs/file/:jobId', async (req, res) => {
   try {
     const r = await pool.query(
-      `UPDATE resume_jobs SET status='printed',printed_at=NOW() WHERE id=$1 RETURNING file_public_id`,
+      'SELECT file_url FROM resume_jobs WHERE id=$1',
       [req.params.jobId]
     );
-    if (r.rows.length && r.rows[0].file_public_id) {
-      await deleteFromCloudinary(r.rows[0].file_public_id);
-    }
+    if (!r.rows.length) return res.status(404).json({ error: 'Job not found' });
+
+    const base64 = r.rows[0].file_url;
+    const buf    = Buffer.from(base64, 'base64');
+    res.set('Content-Type', 'application/pdf');
+    res.set('Content-Disposition', 'attachment; filename="resume.pdf"');
+    res.set('Content-Length', buf.length);
+    res.send(buf);
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/jobs/complete/:jobId', async (req, res) => {
+  try {
+    // Clear base64 PDF from DB after print — save storage
+    await pool.query(
+      `UPDATE resume_jobs SET status='printed', printed_at=NOW(), file_url='printed', file_public_id='done' WHERE id=$1`,
+      [req.params.jobId]
+    );
+    console.log(`✅ Job ${req.params.jobId} printed — PDF cleared from DB`);
     res.json({ success:true });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });

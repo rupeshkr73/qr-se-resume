@@ -1,19 +1,24 @@
 """
-QR Se Resume - Local Print Agent v1.0
-Kaam: Server se pending resume jobs pick karo, print karo, complete mark karo
+QR Se Resume - Local Print Agent v2.0
+Fix: PDF seedha server se download hota hai — Cloudinary nahi, 401 nahi!
 """
 
-import requests, time, os, sys, tempfile, subprocess
+import requests
+import time
+import os
+import sys
+import tempfile
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
-# ══════════════════════════════════════════
+# ============================================================
 SHOP_ID        = "AAPKA_RSHOP_ID"   # Dashboard se copy karo
 SERVER_URL     = "https://qr-se-resume.onrender.com"
 CHECK_INTERVAL = 5
 LOG_FILE       = "resume_agent_log.txt"
-VERSION        = "1.0.0"
-# ══════════════════════════════════════════
+VERSION        = "2.0.0"
+# ============================================================
 
 def log(msg, level="INFO"):
     ts   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -28,8 +33,8 @@ def log(msg, level="INFO"):
 def show_banner():
     print(f"""
 ╔══════════════════════════════════════════════╗
-║      QR Se Resume - Print Agent v{VERSION}     ║
-║   ✅ Auto PDF Print  ✅ B&W / Color           ║
+║    QR Se Resume - Print Agent v{VERSION}      ║
+║  ✅ No Cloudinary  ✅ Direct Download         ║
 ╚══════════════════════════════════════════════╝
 """)
 
@@ -51,32 +56,42 @@ def check_printer():
         log(f"❌ Printer error: {e}", "ERROR")
         return False, None
 
-def download_file(url):
+def download_pdf(job_id):
+    """Server se directly PDF download karo — no Cloudinary, no 401!"""
     try:
-        log(f"⬇️  Downloading resume PDF...")
+        url = f"{SERVER_URL}/api/jobs/file/{job_id}"
+        log(f"⬇️  Downloading PDF from server: {url}")
         resp = requests.get(url, timeout=60)
         resp.raise_for_status()
+
         if len(resp.content) < 100:
-            log(f"❌ File bahut choti: {len(resp.content)} bytes", "ERROR")
+            log(f"❌ PDF too small: {len(resp.content)} bytes", "ERROR")
             return None
+
+        # Check it's actually a PDF
+        if not resp.content.startswith(b'%PDF'):
+            log(f"❌ Not a valid PDF file!", "ERROR")
+            return None
+
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
         tmp.write(resp.content)
         tmp.close()
-        log(f"✅ Downloaded: {tmp.name} ({len(resp.content):,} bytes)")
+        log(f"✅ PDF downloaded: {tmp.name} ({len(resp.content):,} bytes)")
         return tmp.name
+
     except Exception as e:
         log(f"❌ Download failed: {e}", "ERROR")
         return None
 
 def print_pdf(filepath, color_mode="bw"):
-    """SumatraPDF se print — B&W ya Color"""
+    """SumatraPDF se print karo"""
     sumatra_paths = [
         r"C:\Program Files\SumatraPDF\SumatraPDF.exe",
         r"C:\Program Files (x86)\SumatraPDF\SumatraPDF.exe",
         os.path.expanduser(r"~\AppData\Local\SumatraPDF\SumatraPDF.exe"),
     ]
     settings = f"copies=1,{'monochrome,' if color_mode=='bw' else ''}fit"
-    log(f"🖨️  Mode: {color_mode.upper()} | Settings: {settings}")
+    log(f"🖨️  Printing — Mode: {color_mode.upper()} | Settings: {settings}")
 
     for sumatra in sumatra_paths:
         if os.path.exists(sumatra):
@@ -91,6 +106,7 @@ def print_pdf(filepath, color_mode="bw"):
                 err = result.stderr.decode(errors='ignore') if result.stderr else ''
                 log(f"⚠️  SumatraPDF error: {err}", "WARN")
 
+    # Fallback
     log("⚠️  SumatraPDF nahi mila — Windows shell fallback", "WARN")
     try:
         os.startfile(filepath, "print")
@@ -116,7 +132,7 @@ def get_pending_jobs():
 def mark_complete(job_id):
     try:
         requests.post(f"{SERVER_URL}/api/jobs/complete/{job_id}", timeout=15)
-        log(f"✅ Job {job_id} complete! PDF Cloudinary se delete ho raha hai...")
+        log(f"✅ Job {job_id} complete! PDF server se delete ho gaya.")
     except Exception as e:
         log(f"❌ Complete mark error: {e}", "ERROR")
 
@@ -128,37 +144,28 @@ def mark_failed(job_id, reason=""):
         pass
 
 def process_job(job):
-    job_id  = job.get("id", "unknown")
-    url     = job.get("file_url")
-    color   = job.get("color_mode", "bw")
-    name    = job.get("customer_name", "Customer")
-    amount  = job.get("amount", 0)
+    job_id = job.get("id", "unknown")
+    color  = job.get("color_mode", "bw")
+    name   = job.get("customer_name", "Customer")
+    amount = job.get("amount", 0)
 
     log("━" * 42)
     log(f"📄 Job: {job_id}")
     log(f"   Customer: {name}")
     log(f"   Mode: {color.upper()} | ₹{amount}")
 
-    if not url:
-        log("❌ File URL nahi!", "ERROR")
-        mark_failed(job_id, "No URL")
-        return
-
-    filepath = download_file(url)
+    # Download PDF directly from server
+    filepath = download_pdf(job_id)
     if not filepath:
         mark_failed(job_id, "Download failed")
         return
 
-    if os.path.getsize(filepath) < 100:
-        log("❌ File empty!", "ERROR")
-        os.unlink(filepath)
-        mark_failed(job_id, "Empty file")
-        return
-
+    # Print
     success = print_pdf(filepath, color)
 
+    # Delete local temp file
     try:
-        time.sleep(3)
+        time.sleep(2)
         if os.path.exists(filepath):
             os.unlink(filepath)
             log("🗑️  Local PDF deleted")
@@ -167,7 +174,7 @@ def process_job(job):
 
     if success:
         mark_complete(job_id)
-        log(f"🎉 Job {job_id} DONE! Resume print ho gaya!")
+        log(f"🎉 Job {job_id} DONE!")
     else:
         mark_failed(job_id, "Print failed")
         log(f"❌ Job {job_id} FAILED!", "ERROR")
@@ -185,8 +192,7 @@ def main():
 
     log(f"✅ Printer ready: {printer_name}")
     log("=" * 42)
-    log(f"Har {CHECK_INTERVAL}s mein check hoga...")
-    log("Ctrl+C se band karo")
+    log(f"Har {CHECK_INTERVAL}s mein check hoga... | Ctrl+C se band karo")
     log("=" * 42)
 
     errors = 0
