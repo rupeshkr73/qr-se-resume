@@ -478,37 +478,51 @@ textarea.fi{resize:vertical;min-height:65px}
   <div class="card hidden" id="fE">
     <h3>📸 Passport Photo</h3>
     <div class="card-sub">Step 5 of 5 — Optional lekin achha lagta hai</div>
-    <!-- Upload Zone -->
-    <div class="photo-zone" id="photoZone">
-      <input type="file" id="photoIn" accept="image/*" onchange="handlePhoto(this)">
-      <img id="photoPrev" class="photo-prev" alt="">
-      <div id="pIcon" style="font-size:32px;margin-bottom:6px">🖼️</div>
-      <div style="font-size:12px;font-weight:600;color:var(--text)">Koi bhi Photo Select Karein</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:3px">Selfie / Gallery / Passport — sab chalega</div>
-    </div>
-
-    <!-- Processing indicator -->
-    <div id="photoProcessing" style="display:none;text-align:center;padding:16px;background:#f0f4ff;border-radius:12px;margin-top:10px">
-      <div style="font-size:24px;margin-bottom:6px;animation:spin .8s linear infinite;display:inline-block">⚙️</div>
-      <div style="font-size:12px;font-weight:600;color:var(--primary)">Passport photo ban raha hai...</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:3px">Blue background + crop + resize ho raha hai</div>
-    </div>
-
-    <!-- Result box — shows after processing -->
-    <div id="photoResult" style="display:none;margin-top:10px">
-      <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px">
-        <img id="passportPrev" style="width:52px;height:65px;object-fit:cover;border-radius:6px;border:2px solid #16a34a;flex-shrink:0" alt="">
-        <div>
-          <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:3px">✅ Passport Photo Ready!</div>
-          <div style="font-size:11px;color:#555;margin-bottom:6px">Blue background • 35×45mm size</div>
-          <button onclick="retakePhoto()" style="background:#fff;border:1.5px solid var(--border);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)">🔄 Dobara Upload Karo</button>
+    <!-- 2 Option Buttons -->
+    <div id="photoOptions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <!-- Option 1: Direct passport upload -->
+      <div style="position:relative">
+        <input type="file" id="photoInDirect" accept="image/*" onchange="handleDirect(this)"
+          style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2">
+        <div style="border:2px solid var(--border);border-radius:11px;padding:14px 10px;text-align:center;background:#fff;cursor:pointer">
+          <div style="font-size:26px;margin-bottom:5px">🪪</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Passport Photo</div>
+          <div style="font-size:10px;color:var(--muted)">Already passport size hai</div>
+        </div>
+      </div>
+      <!-- Option 2: Any photo → auto convert -->
+      <div style="position:relative">
+        <input type="file" id="photoInAuto" accept="image/*" onchange="handleAuto(this)"
+          style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2">
+        <div style="border:2px solid var(--primary);border-radius:11px;padding:14px 10px;text-align:center;background:var(--primary-l);cursor:pointer">
+          <div style="font-size:26px;margin-bottom:5px">✨</div>
+          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:2px">Koi bhi Photo</div>
+          <div style="font-size:10px;color:var(--primary);opacity:.7">Auto passport size banega</div>
         </div>
       </div>
     </div>
 
-    <!-- Hidden canvas for processing -->
+    <!-- Processing -->
+    <div id="photoProcessing" style="display:none;text-align:center;padding:12px;background:#f0f4ff;border-radius:11px;margin-bottom:10px">
+      <div class="spin" style="width:28px;height:28px;border-width:3px;margin:0 auto 7px"></div>
+      <div style="font-size:12px;font-weight:600;color:var(--primary)" id="procTxt">Photo process ho raha hai...</div>
+    </div>
+
+    <!-- Result -->
+    <div id="photoResult" style="display:none;margin-bottom:10px">
+      <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:11px;padding:11px;display:flex;align-items:center;gap:11px">
+        <img id="passportPrev" style="width:48px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #16a34a;flex-shrink:0" alt="">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:2px" id="resultLabel">✅ Photo Ready!</div>
+          <div style="font-size:10px;color:#555;margin-bottom:6px" id="resultSub">35×45mm passport size</div>
+          <button onclick="retakePhoto()" style="background:#fff;border:1.5px solid var(--border);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)">🔄 Dobara Karo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden canvas -->
     <canvas id="photoCanvas" style="display:none"></canvas>
-    <div style="height:14px"></div>
+    <div style="height:10px"></div>
     <div style="background:#f8faff;border-radius:10px;padding:13px;border:1px solid var(--border);margin-bottom:12px">
       <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">✍️ Declaration Details</div>
       <div class="fg">
@@ -774,83 +788,82 @@ function getExtras() {
 // ══════════════════════════════════════════════
 // PHOTO
 // ══════════════════════════════════════════════
-function handlePhoto(inp) {
+// Option 1 — Direct passport upload (no conversion)
+function handleDirect(inp) {
   if (!inp.files[0]) return;
-  const file = inp.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    photoURL = e.target.result;
+    showPhotoResult(e.target.result, '✅ Passport Photo Upload Ho Gaya!', 'As-is use hoga resume mein');
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
 
-  // Show processing
-  document.getElementById('photoZone').style.display       = 'none';
+// Option 2 — Any photo → auto passport size with blue bg
+function handleAuto(inp) {
+  if (!inp.files[0]) return;
+  document.getElementById('photoOptions').style.display    = 'none';
   document.getElementById('photoResult').style.display     = 'none';
   document.getElementById('photoProcessing').style.display = 'block';
+  document.getElementById('procTxt').textContent = 'Blue background + passport size ban raha hai...';
 
   const reader = new FileReader();
   reader.onload = e => {
     const img = new Image();
-    img.onload = () => {
-      setTimeout(() => makePassportPhoto(img), 300); // small delay for UX
-    };
+    img.onload = () => makePassportPhoto(img);
     img.src = e.target.result;
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(inp.files[0]);
 }
 
 function makePassportPhoto(img) {
-  // Passport size = 35mm x 45mm ratio = 35:45 = 7:9
-  const PW = 413; // 35mm @ 300dpi
-  const PH = 531; // 45mm @ 300dpi
-
+  // Small canvas = faster processing (150x193 px — enough for print)
+  const PW = 150, PH = 193;
   const canvas = document.getElementById('photoCanvas');
-  canvas.width  = PW;
-  canvas.height = PH;
+  canvas.width = PW; canvas.height = PH;
   const ctx = canvas.getContext('2d');
 
-  // Step 1: Fill light blue background
-  ctx.fillStyle = '#4da6d9'; // passport blue
+  // Blue background
+  ctx.fillStyle = '#5b9bd5';
   ctx.fillRect(0, 0, PW, PH);
 
-  // Step 2: Crop image to fit — center crop
-  const srcRatio  = img.width / img.height;
-  const destRatio = PW / PH;
-
+  // Center crop — face bias top
+  const srcR = img.width / img.height;
+  const dstR = PW / PH;
   let sx, sy, sw, sh;
-  if (srcRatio > destRatio) {
-    // Image wider than needed — crop sides
-    sh = img.height;
-    sw = img.height * destRatio;
-    sx = (img.width - sw) / 2;
-    sy = 0;
+  if (srcR > dstR) {
+    sh = img.height; sw = sh * dstR;
+    sx = (img.width - sw) / 2; sy = 0;
   } else {
-    // Image taller than needed — crop top/bottom, keep more of top (face)
-    sw = img.width;
-    sh = img.width / destRatio;
-    sx = 0;
-    // Bias toward top 60% so face stays visible
-    sy = Math.max(0, (img.height - sh) * 0.25);
+    sw = img.width; sh = sw / dstR;
+    sx = 0; sy = Math.max(0, (img.height - sh) * 0.2);
   }
-
-  // Step 3: Draw cropped image over background
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, PW, PH);
 
-  // Step 4: Get result as data URL
-  const result = canvas.toDataURL('image/jpeg', 0.95);
+  const result = canvas.toDataURL('image/jpeg', 0.92);
   photoURL = result;
 
-  // Hide processing, show result
+  document.getElementById('photoProcessing').style.display = 'none';
+  showPhotoResult(result, '✅ Auto Passport Photo Ready!', 'Blue background • 35×45mm size');
+}
+
+function showPhotoResult(src, label, sub) {
+  document.getElementById('photoOptions').style.display    = 'none';
   document.getElementById('photoProcessing').style.display = 'none';
   document.getElementById('photoResult').style.display     = 'block';
-
-  const prev = document.getElementById('passportPrev');
-  prev.src = result;
-
-  toast('✅ Passport photo ready!');
+  document.getElementById('passportPrev').src  = src;
+  document.getElementById('resultLabel').textContent = label;
+  document.getElementById('resultSub').textContent   = sub;
+  toast('📸 Photo ready!');
 }
 
 function retakePhoto() {
   photoURL = null;
   document.getElementById('photoResult').style.display     = 'none';
   document.getElementById('photoProcessing').style.display = 'none';
-  document.getElementById('photoZone').style.display       = 'block';
-  document.getElementById('photoIn').value = '';
+  document.getElementById('photoOptions').style.display    = 'grid';
+  document.getElementById('photoInDirect').value = '';
+  document.getElementById('photoInAuto').value   = '';
 }
 
 // ══════════════════════════════════════════════
