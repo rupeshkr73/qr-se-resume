@@ -75,16 +75,14 @@ async function initDB() {
 // ── Cloudinary Upload (multipart — works with all key types) ──────────────────
 async function uploadToCloudinary(fileBuffer) {
   return new Promise((resolve, reject) => {
-    const ts  = Math.round(Date.now() / 1000);
-    const pid = 'resume_' + uuidv4().replace(/-/g,'').substring(0, 10);
+    // Signed upload — works with any Cloudinary account, no preset needed
+    const ts     = Math.round(Date.now() / 1000);
+    const folder = 'resumes';
+    const sigStr = `folder=${folder}&timestamp=${ts}${CLD_SECRET}`;
+    const sig    = crypto.createHash('sha256').update(sigStr).digest('hex');
 
-    // Signature string — alphabetical order
-    const sigStr = `public_id=${pid}&resource_type=raw&timestamp=${ts}${CLD_SECRET}`;
-    const sig = crypto.createHash('sha256').update(sigStr).digest('hex');
-
-    // Build multipart manually
     const boundary = 'X' + crypto.randomBytes(16).toString('hex');
-    const parts = [];
+    const parts    = [];
 
     function addField(name, value) {
       parts.push(
@@ -92,13 +90,11 @@ async function uploadToCloudinary(fileBuffer) {
       );
     }
 
-    addField('api_key',       CLD_KEY);
-    addField('timestamp',     String(ts));
-    addField('public_id',     pid);
-    addField('resource_type', 'raw');
-    addField('signature',     sig);
+    addField('api_key',   CLD_KEY);
+    addField('timestamp', String(ts));
+    addField('folder',    folder);
+    addField('signature', sig);
 
-    // File part
     const filePart = Buffer.concat([
       Buffer.from(
         `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="resume.pdf"\r\nContent-Type: application/pdf\r\n\r\n`
@@ -107,9 +103,9 @@ async function uploadToCloudinary(fileBuffer) {
       Buffer.from('\r\n')
     ]);
 
-    const endPart = Buffer.from(`--${boundary}--\r\n`);
-    const textParts = Buffer.from(parts.join(''), 'utf8');
-    const body = Buffer.concat([textParts, filePart, endPart]);
+    const endPart  = Buffer.from(`--${boundary}--\r\n`);
+    const txtParts = Buffer.from(parts.join(''), 'utf8');
+    const body     = Buffer.concat([txtParts, filePart, endPart]);
 
     const options = {
       hostname: 'api.cloudinary.com',
@@ -127,11 +123,11 @@ async function uploadToCloudinary(fileBuffer) {
       res.on('end', () => {
         try {
           const r = JSON.parse(data);
-          console.log('Cloudinary:', r.secure_url ? '✅ OK' : '❌ ' + JSON.stringify(r));
+          console.log('Cloudinary:', r.secure_url ? '✅ Upload OK — ' + r.secure_url : '❌ ' + JSON.stringify(r));
           if (r.secure_url) {
             resolve({ url: r.secure_url, publicId: r.public_id });
           } else {
-            reject(new Error('Cloudinary upload failed: ' + JSON.stringify(r)));
+            reject(new Error('Cloudinary: ' + JSON.stringify(r)));
           }
         } catch(e) { reject(e); }
       });
@@ -141,18 +137,17 @@ async function uploadToCloudinary(fileBuffer) {
     req.end();
   });
 }
-
-// ── Cloudinary Delete ─────────────────────────────────────────────────────────
 async function deleteFromCloudinary(publicId) {
   return new Promise(resolve => {
     const ts  = Math.round(Date.now() / 1000);
     const sig = crypto.createHash('sha256')
-      .update(`public_id=${publicId}&timestamp=${ts}${CLD_SECRET}`)
+      .update(`public_id=${publicId}&resource_type=raw&timestamp=${ts}${CLD_SECRET}`)
       .digest('hex');
     const body = new URLSearchParams({
       public_id: publicId,
       api_key: CLD_KEY,
       timestamp: String(ts),
+      resource_type: 'raw',
       signature: sig
     }).toString();
     const opts = {
