@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Se Resume — Shop Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f0f4ff;--white:#fff;--border:#dde4f0;--text:#0d1b2a;--muted:#6b7a99;--primary:#2563eb;--primary-l:#eff4ff;--green:#16a34a;--green-l:#f0fdf4;--r:12px;--rl:18px}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;padding:20px 14px 60px}
+.wrap{max-width:520px;margin:0 auto}
+.hdr{background:linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed);border-radius:var(--rl);padding:20px;margin-bottom:20px;text-align:center}
+.hdr h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
+.hdr p{color:rgba(255,255,255,.6);font-size:13px}
+.price-banner{background:#0d1b2a;border-radius:var(--rl);padding:16px 20px;margin-bottom:20px;text-align:center}
+.price-actual{font-size:15px;color:rgba(255,255,255,.4);text-decoration:line-through;margin-bottom:4px}
+.price-offer{font-size:32px;font-weight:800;color:#4ade80;font-family:'Plus Jakarta Sans',sans-serif}
+.price-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+.step-tabs{display:flex;gap:0;margin-bottom:20px;background:#e2e8f0;border-radius:10px;padding:3px}
+.tab{flex:1;text-align:center;padding:8px;border-radius:8px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s}
+.tab.active{background:#fff;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.sec{display:none}.sec.on{display:block}
+.card{background:var(--white);border-radius:var(--rl);padding:18px;margin-bottom:14px;border:1px solid var(--border)}
+.card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px}
+.card-sub{font-size:11px;color:var(--muted);margin-bottom:14px}
+.fg{margin-bottom:12px}
+.fl{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px}
+.req{color:#ef4444}
+.fi{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border .2s;background:#fff}
+.fi:focus{border-color:var(--primary)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.btn-p{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff}
+.btn-g{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff}
+.btn-b{background:var(--bg);color:var(--muted);font-size:13px}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.pay-opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.pay-opt{border:2px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:.2s;background:#fff}
+.pay-opt:hover{border-color:#93c5fd}
+.pay-opt.sel{border-color:var(--primary);background:var(--primary-l)}
+.pay-opt-icon{font-size:20px;margin-bottom:4px}
+.pay-opt-name{font-size:10px;font-weight:700;color:var(--text)}
+.info-box{background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:#166534;line-height:1.6}
+.warn-box{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:#92400e;line-height:1.6}
+/* Success screen */
+.success{display:none;text-align:center;padding:10px 0}
+.success-icon{width:72px;height:72px;background:linear-gradient(135deg,#16a34a,#22c55e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;animation:pop .5s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.success h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px}
+.shop-id-box{background:#0d1b2a;border-radius:12px;padding:14px;margin:14px 0;text-align:left}
+.shop-id-label{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px}
+.shop-id-val{font-size:16px;font-weight:800;color:#4ade80;letter-spacing:1px;font-family:monospace}
+.dl-btns{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.dl-btn{padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;display:flex;align-items:center;gap:10px;color:#fff;transition:.2s;text-decoration:none}
+.dl-btn:hover{transform:translateY(-1px);opacity:.93}
+.dl-btn-qr{background:#16a34a}
+.dl-btn-agent{background:#2563eb}
+.dl-btn-readme{background:#7c3aed}
+.login-redirect{background:#f8faff;border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-top:14px;text-align:center}
+.login-redirect p{font-size:12px;color:var(--muted);margin-bottom:8px}
+.login-redirect a{display:inline-block;padding:8px 20px;background:var(--primary);color:#fff;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#0d1b2a;color:#fff;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;z-index:300;transition:.3s cubic-bezier(.175,.885,.32,1.275)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.loading{display:none;position:fixed;inset:0;background:rgba(13,27,42,.75);z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading.show{display:flex}
+.spin{width:42px;height:42px;border:4px solid rgba(255,255,255,.2);border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{color:#fff;font-size:13px;font-weight:600}
+.admin-login-link{display:block;text-align:center;margin-top:24px;padding:10px;background:rgba(0,0,0,.04);border-radius:8px;font-size:11px;color:var(--muted);text-decoration:none}
+.admin-login-link:hover{background:rgba(0,0,0,.08)}
+.shop-login-btn{position:absolute;top:14px;right:14px;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;color:var(--primary);text-decoration:none}
+.top-bar{position:relative;margin-bottom:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top-bar">
+  <a href="/shop-admin" class="shop-login-btn">🔑 Shop Login</a>
+</div>
+
+<div class="hdr" style="margin-top:10px">
+  <h1>📄 QR Se Resume — Setup</h1>
+  <p>Apni dukaan register karo, QR lagao, resume print karo!</p>
+</div>
+
+<div class="price-banner">
+  <div class="price-actual" id="actualPrice">₹999</div>
+  <div class="price-offer" id="offerPrice">₹499</div>
+  <div class="price-sub">One-time setup fee • Lifetime use</div>
+</div>
+
+<!-- Step tabs -->
+<div class="step-tabs">
+  <div class="tab active" id="tab1">1. Shop Info</div>
+  <div class="tab" id="tab2">2. Payment Setup</div>
+  <div class="tab" id="tab3">3. Pay & Get QR</div>
+</div>
+
+<!-- ── Step 1: Shop Info ── -->
+<div class="sec on" id="sec1">
+  <div class="card">
+    <h3>🏪 Shop Details</h3>
+    <div class="card-sub">Basic information about your shop</div>
+    <div class="fg"><div class="fl">Shop Name <span class="req">*</span></div><input class="fi" id="s_name" placeholder="Jaise: Mahato Net Cafe"></div>
+    <div class="fg"><div class="fl">Address <span class="req">*</span></div><input class="fi" id="s_addr" placeholder="Village, Town, District, State"></div>
+    <div class="fr">
+      <div class="fg"><div class="fl">Mobile <span class="req">*</span></div><input type="tel" class="fi" id="s_phone" placeholder="9876543210"></div>
+      <div class="fg"><div class="fl">Email</div><input type="email" class="fi" id="s_email" placeholder="shop@gmail.com"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><div class="fl">B&W Print Rate (₹)</div><input type="number" class="fi" id="s_bw" value="10"></div>
+      <div class="fg"><div class="fl">Color Print Rate (₹)</div><input type="number" class="fi" id="s_color" value="20"></div>
+    </div>
+    <div class="fg">
+      <div class="fl">Payment Options for Customers</div>
+      <div class="pay-opts">
+        <div class="pay-opt sel" onclick="selPay('both')" id="po_both">
+          <div class="pay-opt-icon">💳🏪</div>
+          <div class="pay-opt-name">Online + Counter</div>
+        </div>
+        <div class="pay-opt" onclick="selPay('counter')" id="po_counter">
+          <div class="pay-opt-icon">🏪</div>
+          <div class="pay-opt-name">Only Counter</div>
+        </div>
+        <div class="pay-opt" onclick="selPay('online')" id="po_online">
+          <div class="pay-opt-icon">💳</div>
+          <div class="pay-opt-name">Only Online</div>
+        </div>
+      </div>
+      <input type="hidden" id="s_paymode" value="both">
+    </div>
+    <div class="fg"><div class="fl">Create Password <span class="req">*</span></div><input type="password" class="fi" id="s_pass" placeholder="Login ke liye password banao"></div>
+    <div class="fg"><div class="fl">Confirm Password <span class="req">*</span></div><input type="password" class="fi" id="s_pass2" placeholder="Same password dobara likhein"></div>
+    <button class="btn btn-p" onclick="goStep2()">Aage — Payment Setup →</button>
+  </div>
+</div>
+
+<!-- ── Step 2: Payment Setup ── -->
+<div class="sec" id="sec2">
+  <div class="card">
+    <h3>💳 Online Payment Setup</h3>
+    <div class="card-sub">Agar customers online pay karein to aapke account mein paisa jayega</div>
+    <div class="info-box">ℹ️ Sirf tab fill karo jab aapne "Online" ya "Online+Counter" select kiya ho. Counter only shop ke liye ye skip kar sakte ho.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:.2s" id="gw_rzp" onclick="selGateway('razorpay')">
+        <div style="font-size:20px;margin-bottom:4px">💳</div>
+        <div style="font-size:12px;font-weight:700">Razorpay</div>
+      </div>
+      <div style="border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:.2s" id="gw_pp" onclick="selGateway('phonepay')">
+        <div style="font-size:20px;margin-bottom:4px">📱</div>
+        <div style="font-size:12px;font-weight:700">PhonePe</div>
+      </div>
+    </div>
+
+    <!-- Razorpay fields -->
+    <div id="rzp_fields">
+      <div class="fg"><div class="fl">Razorpay Key ID</div><input class="fi" id="s_rzp_id" placeholder="rzp_live_xxxxxxxxxxxxxxxx"></div>
+      <div class="fg"><div class="fl">Razorpay Key Secret</div><input type="password" class="fi" id="s_rzp_secret" placeholder="Your Razorpay secret key"></div>
+    </div>
+
+    <!-- PhonePe fields -->
+    <div id="pp_fields" style="display:none">
+      <div class="fg"><div class="fl">PhonePe Merchant Key</div><input class="fi" id="s_pp_key" placeholder="PhonePe merchant key"></div>
+    </div>
+
+    <div class="warn-box">⚠️ Keys safely encrypted hoke store honge. Kisi ke saath share mat karo.</div>
+    <button class="btn btn-p" onclick="goStep3()">Aage — Pay & Get QR →</button>
+    <button class="btn btn-b" onclick="showSec(1)">← Wapas</button>
+  </div>
+</div>
+
+<!-- ── Step 3: Pay Setup Fee ── -->
+<div class="sec" id="sec3">
+  <div class="card">
+    <h3>🎉 Almost Done!</h3>
+    <div class="card-sub">Setup fee pay karo aur apna QR code pao</div>
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:14px" id="summaryBox"></div>
+    <div class="info-box">✅ Payment ke baad:<br>• Unique Shop ID milega<br>• QR Code download kar sakte ho<br>• Print Agent download hoga<br>• Readme instructions milenge</div>
+    <button class="btn btn-g" onclick="paySetup()" id="payBtn">💳 Pay ₹<span id="payAmt">499</span> & Get Started</button>
+    <button class="btn btn-b" onclick="showSec(2)">← Wapas</button>
+  </div>
+</div>
+
+<!-- ── Success ── -->
+<div class="card" id="successCard" style="display:none">
+  <div class="success" id="successDiv">
+    <div class="success-icon">🎉</div>
+    <h2>Setup Complete!</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:10px">Aapki shop register ho gayi!</p>
+    <div class="shop-id-box">
+      <div class="shop-id-label">Your Shop ID (Login ke liye save karo)</div>
+      <div class="shop-id-val" id="finalShopId">RSHOP_XXXXXXXX</div>
+    </div>
+    <div class="dl-btns">
+      <a id="dlQR" class="dl-btn dl-btn-qr" download="shop-qr.png">⬇️ QR Code Download Karo</a>
+      <a id="dlAgent" class="dl-btn dl-btn-agent" href="/downloads/print_agent.py" download="print_agent.py">⬇️ Print Agent Download Karo</a>
+      <a id="dlReadme" class="dl-btn dl-btn-readme" href="/downloads/README.txt" download="README.txt">📄 README Instructions</a>
+    </div>
+    <div class="login-redirect">
+      <p>Ab apne Shop Admin Panel mein login karo</p>
+      <a href="/shop-admin">🔑 Shop Admin Login</a>
+    </div>
+  </div>
+</div>
+
+<a href="/shop-admin" class="admin-login-link">🔑 Already registered? Shop Owner Login</a>
+<a href="/super-admin" style="display:block;text-align:center;margin-top:8px;font-size:10px;color:#cbd5e1;text-decoration:none">Super Admin</a>
+
+</div><!-- /wrap -->
+
+<div class="loading" id="loading"><div class="spin"></div><div class="load-txt" id="loadT">Please wait...</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let currentStep = 1;
+let selGw = 'razorpay';
+let registeredShopId = null;
+
+// Load prices
+async function loadPrices() {
+  try {
+    const r = await fetch('/api/settings');
+    const cfg = await r.json();
+    const actual = cfg.setup_price || '999';
+    const offer  = cfg.setup_offer_price || '499';
+    document.getElementById('actualPrice').textContent = '₹' + actual;
+    document.getElementById('offerPrice').textContent  = '₹' + offer;
+    document.getElementById('payAmt').textContent = offer;
+  } catch{}
+}
+
+function selPay(mode) {
+  ['both','counter','online'].forEach(m => {
+    document.getElementById('po_'+m).classList.toggle('sel', m===mode);
+  });
+  document.getElementById('s_paymode').value = mode;
+}
+
+function selGateway(gw) {
+  selGw = gw;
+  document.getElementById('gw_rzp').style.border = gw==='razorpay' ? '2px solid #2563eb' : '2px solid #dde4f0';
+  document.getElementById('gw_pp').style.border  = gw==='phonepay'  ? '2px solid #2563eb' : '2px solid #dde4f0';
+  document.getElementById('rzp_fields').style.display = gw==='razorpay' ? 'block' : 'none';
+  document.getElementById('pp_fields').style.display  = gw==='phonepay'  ? 'block' : 'none';
+}
+
+function showSec(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('sec'+i).classList.toggle('on', i===n);
+    document.getElementById('tab'+i).classList.toggle('active', i===n);
+  });
+  currentStep = n;
+  window.scrollTo(0,0);
+}
+
+function gv(id) { return (document.getElementById(id)?.value||'').trim(); }
+
+function goStep2() {
+  if (!gv('s_name')) { toast('❌ Shop name likhein'); return; }
+  if (!gv('s_addr')) { toast('❌ Address likhein'); return; }
+  if (!gv('s_phone')) { toast('❌ Mobile likhein'); return; }
+  if (!gv('s_pass')) { toast('❌ Password banao'); return; }
+  if (gv('s_pass') !== gv('s_pass2')) { toast('❌ Password match nahi kar raha!'); return; }
+  if (gv('s_pass').length < 6) { toast('❌ Password kam se kam 6 characters ka hona chahiye'); return; }
+  showSec(2);
+}
+
+function goStep3() {
+  // Build summary
+  const paymode = document.getElementById('s_paymode').value;
+  const modeMap = {both:'Online + Counter', counter:'Sirf Counter', online:'Sirf Online'};
+  document.getElementById('summaryBox').innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📋 SUMMARY</div>
+    <div style="font-size:13px;margin-bottom:4px">🏪 <b>${gv('s_name')}</b></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">📍 ${gv('s_addr')}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">📞 ${gv('s_phone')}</div>
+    <div style="font-size:12px;margin-bottom:4px">💰 B&W ₹${gv('s_bw')} | Color ₹${gv('s_color')}</div>
+    <div style="font-size:12px">💳 Payment: ${modeMap[paymode]||paymode}</div>
+  `;
+  showSec(3);
+}
+
+async function paySetup() {
+  showLoad('Shop register ho raha hai...');
+  try {
+    // Step 1: Register shop
+    const regResp = await fetch('/api/shop/register', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name:         gv('s_name'),
+        address:      gv('s_addr'),
+        phone:        gv('s_phone'),
+        email:        gv('s_email'),
+        price_bw:     parseInt(gv('s_bw'))||10,
+        price_color:  parseInt(gv('s_color'))||20,
+        payment_mode: document.getElementById('s_paymode').value,
+        rzp_key_id:   gv('s_rzp_id'),
+        rzp_key_secret: document.getElementById('s_rzp_secret')?.value||'',
+        phonepay_key: gv('s_pp_key'),
+        password:     gv('s_pass')
+      })
+    });
+    const regData = await regResp.json();
+    if (!regData.success) throw new Error(regData.error||'Registration failed');
+    registeredShopId = regData.shopId;
+
+    // Step 2: Create payment order
+    const orderResp = await fetch('/api/shop/setup-payment/create', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ shopId: registeredShopId })
+    });
+    const orderData = await orderResp.json();
+    if (!orderData.orderId) throw new Error(orderData.error||'Payment order failed');
+    hideLoad();
+
+    // Step 3: Open Razorpay
+    const rzp = new Razorpay({
+      key:         orderData.keyId,
+      amount:      orderData.amount,
+      currency:    'INR',
+      name:        'QR Se Resume',
+      description: 'Shop Setup Fee',
+      order_id:    orderData.orderId,
+      handler: async function(resp) {
+        showLoad('Payment verify ho raha hai...');
+        const vResp = await fetch('/api/shop/setup-payment/verify', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({...resp, shopId: registeredShopId})
+        });
+        const vData = await vResp.json();
+        hideLoad();
+        if (vData.success) showSuccess(vData);
+        else toast('❌ Payment verify nahi hua');
+      },
+      prefill: { contact: gv('s_phone'), email: gv('s_email') },
+      theme: { color: '#2563eb' }
+    });
+    rzp.open();
+  } catch(e) { hideLoad(); toast('❌ '+e.message); }
+}
+
+function showSuccess(data) {
+  document.getElementById('sec3').classList.remove('on');
+  document.getElementById('successCard').style.display = 'block';
+  document.getElementById('successDiv').style.display  = 'block';
+  document.getElementById('finalShopId').textContent = data.shopId;
+
+  // QR download
+  const dlQR = document.getElementById('dlQR');
+  dlQR.href = data.qrCode;
+  dlQR.download = `QR_${data.shopId}.png`;
+
+  // Agent already has shopId — generate dynamic download
+  document.getElementById('dlAgent').href = `/downloads/print_agent.py?shopId=${data.shopId}`;
+
+  window.scrollTo(0,0);
+  toast('🎉 Setup complete! Shop ID: '+data.shopId);
+}
+
+// Utils
+function showLoad(t) { document.getElementById('loadT').textContent=t||''; document.getElementById('loading').classList.add('show'); }
+function hideLoad() { document.getElementById('loading').classList.remove('show'); }
+function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500); }
+
+loadPrices();
+selGateway('razorpay');
+</script>
+</body>
+</html>

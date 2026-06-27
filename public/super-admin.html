@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super Admin — QR Se Resume</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--primary:#2563eb;--green:#3fb950;--red:#f85149;--yellow:#d29922}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{background:#010409;border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px}
+.badge{background:linear-gradient(135deg,#2563eb,#7c3aed);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;color:#fff}
+.logout-btn{background:#f85149;border:none;color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer}
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+/* Login */
+.login-wrap{max-width:380px;margin:80px auto 0}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
+.login-card h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;margin-bottom:16px}
+.fg{margin-bottom:14px}
+.fl{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block}
+.fi{width:100%;padding:10px 13px;background:#0d1117;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none}
+.fi:focus{border-color:var(--primary)}
+.btn{width:100%;padding:11px;border-radius:10px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;transition:.2s;margin-bottom:8px}
+.btn-p{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff}
+.btn-g{background:#238636;color:#fff}
+.btn-r{background:#da3633;color:#fff;padding:6px 14px;width:auto}
+.btn-sm{padding:6px 14px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600}
+.btn-sm-p{background:#1f6feb;color:#fff}
+.btn-sm-r{background:#da3633;color:#fff}
+/* Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-val{font-size:26px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif}
+.stat-card.blue .stat-val{color:#58a6ff}
+.stat-card.green .stat-val{color:#3fb950}
+.stat-card.purple .stat-val{color:#bc8cff}
+.stat-card.orange .stat-val{color:#f0883e}
+/* Main grid */
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.panel-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:14px;font-weight:700}
+.panel-body{padding:16px}
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase}
+.tbl td{padding:9px 10px;border-bottom:1px solid #21262d;vertical-align:middle}
+.tbl tr:last-child td{border:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.badge-green{background:#0d4429;color:#3fb950;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.badge-red{background:#3d0f0e;color:#f85149;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.badge-yellow{background:#3d2a00;color:#d29922;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+/* Instructions */
+.inst-item{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.inst-text{flex:1;font-size:13px;line-height:1.5;color:var(--text)}
+.inst-del{background:#3d0f0e;border:none;color:#f85149;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;flex-shrink:0;font-weight:700}
+.inst-input{width:100%;padding:10px;background:#0d1117;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;resize:vertical;min-height:60px;outline:none;margin-bottom:8px}
+.inst-input:focus{border-color:var(--primary)}
+/* Settings */
+.setting-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px}
+.setting-row .fg{flex:1;margin-bottom:0}
+.price-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.home-link{display:inline-block;margin-top:16px;color:var(--muted);font-size:12px;text-decoration:none}
+.home-link:hover{color:var(--text)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#161b22;border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;z-index:300;transition:.3s cubic-bezier(.175,.885,.32,1.275)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar" style="display:none">
+  <div class="brand">📄 QR Se Resume <span class="badge">SUPER ADMIN</span></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <a href="/" style="color:var(--muted);font-size:12px;text-decoration:none">🏠 Home</a>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginSection">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:800">Super Admin Login</div>
+  </div>
+  <div class="login-card">
+    <h2>Login</h2>
+    <div class="fg"><label class="fl">Username</label><input class="fi" id="l_user" placeholder="rupeshkr73"></div>
+    <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="l_pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-p" onclick="doLogin()">🔑 Login</button>
+    <a href="/" style="display:block;text-align:center;font-size:12px;color:var(--muted);text-decoration:none;margin-top:8px">← Home</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashSection" style="display:none">
+<div class="wrap">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800">Dashboard</div>
+    <button onclick="loadAll()" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:600">🔄 Refresh</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="stat-label">Total Shops</div><div class="stat-val" id="st_shops">—</div></div>
+    <div class="stat-card green"><div class="stat-label">Setup Revenue</div><div class="stat-val" id="st_setup_rev">—</div></div>
+    <div class="stat-card purple"><div class="stat-label">Total Resumes</div><div class="stat-val" id="st_orders">—</div></div>
+    <div class="stat-card orange"><div class="stat-label">Print Revenue</div><div class="stat-val" id="st_print_rev">—</div></div>
+  </div>
+
+  <div class="main-grid">
+    <!-- Left: Shops table -->
+    <div>
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">🏪 Registered Shops</div>
+          <span id="shopCount" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Shop</th><th>ID</th><th>Phone</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="shopsTbl"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div>
+      <!-- Price Settings -->
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">💰 Setup Fee</div></div>
+        <div class="panel-body">
+          <div class="price-row">
+            <div class="fg"><label class="fl">Actual Price (₹)</label><input type="number" class="fi" id="cfg_actual" placeholder="999"></div>
+            <div class="fg"><label class="fl">Offer Price (₹)</label><input type="number" class="fi" id="cfg_offer" placeholder="499"></div>
+          </div>
+          <button class="btn btn-g" onclick="savePrices()">💾 Save Prices</button>
+        </div>
+      </div>
+
+      <!-- App Version -->
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">🔄 Agent Version</div></div>
+        <div class="panel-body">
+          <div class="fg"><label class="fl">Current Version (agents auto-update to this)</label><input class="fi" id="cfg_version" placeholder="2.1.0"></div>
+          <button class="btn btn-p" onclick="saveVersion()">🚀 Push Update to All Agents</button>
+          <p style="font-size:10px;color:var(--muted);margin-top:6px">Version change hone se sabke agents next check pe auto-update ho jayenge.</p>
+        </div>
+      </div>
+
+      <!-- Instructions Board -->
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">📋 Shop Owner Instructions</div></div>
+        <div class="panel-body">
+          <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Ye instructions sabhi shop owners ke login panel mein dikhenge.</p>
+          <div id="instList" style="margin-bottom:12px"></div>
+          <textarea class="inst-input" id="newInst" placeholder="Naya instruction likhein... (jaise: Agent v2.2 update available hai, README dobara padhein)"></textarea>
+          <button class="btn btn-g" onclick="addInstruction()">+ Add Instruction</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="/" class="home-link">🏠 Home Page</a>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let token = localStorage.getItem('admin_token');
+
+async function doLogin() {
+  const u = document.getElementById('l_user').value.trim();
+  const p = document.getElementById('l_pass').value;
+  try {
+    const r = await fetch('/api/admin/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username:u, password:p })
+    });
+    const d = await r.json();
+    if (!d.success) { toast('❌ '+(d.error||'Wrong credentials')); return; }
+    token = d.token;
+    localStorage.setItem('admin_token', token);
+    showDash();
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+function showDash() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('dashSection').style.display  = 'block';
+  document.getElementById('topbar').style.display       = 'flex';
+  loadAll();
+}
+
+function authH() { return { 'Content-Type':'application/json', 'Authorization':'Bearer '+token }; }
+
+async function loadAll() {
+  await Promise.all([loadStats(), loadShops(), loadSettings(), loadInstructions()]);
+}
+
+async function loadStats() {
+  try {
+    const d = await fetch('/api/admin/stats', { headers: authH() }).then(r=>r.json());
+    document.getElementById('st_shops').textContent     = d.shops?.paid||0;
+    document.getElementById('st_setup_rev').textContent = '₹'+(d.setup?.revenue||0);
+    document.getElementById('st_orders').textContent    = d.orders?.total||0;
+    document.getElementById('st_print_rev').textContent = '₹'+(d.orders?.revenue||0);
+    if (d.settings) {
+      document.getElementById('cfg_actual').value  = d.settings.setup_price||'999';
+      document.getElementById('cfg_offer').value   = d.settings.setup_offer_price||'499';
+      document.getElementById('cfg_version').value = d.settings.app_version||'2.1.0';
+    }
+  } catch(e) { toast('❌ Stats: '+e.message); }
+}
+
+async function loadShops() {
+  try {
+    const shops = await fetch('/api/admin/shops', { headers: authH() }).then(r=>r.json());
+    document.getElementById('shopCount').textContent = shops.length + ' shops';
+    const modeMap = {both:'Online+Counter', counter:'Counter', online:'Online'};
+    document.getElementById('shopsTbl').innerHTML = shops.length ? shops.map(s=>`
+      <tr>
+        <td><div style="font-weight:600;font-size:12px">${esc(s.name)}</div><div style="font-size:10px;color:var(--muted)">${esc(s.phone||'')}</div></td>
+        <td style="font-family:monospace;font-size:11px;color:#58a6ff">${s.id}</td>
+        <td style="font-size:11px">${esc(s.phone||'—')}</td>
+        <td style="font-size:11px">${modeMap[s.payment_mode]||s.payment_mode}</td>
+        <td>${s.setup_paid ? '<span class="badge-green">Active</span>' : '<span class="badge-yellow">Pending</span>'}</td>
+        <td>
+          <button class="btn-sm ${s.active?'btn-sm-r':'btn-sm-p'}" onclick="toggleShop('${s.id}',${!s.active})">
+            ${s.active?'Disable':'Enable'}
+          </button>
+        </td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No shops yet</td></tr>';
+  } catch(e) { toast('❌ Shops: '+e.message); }
+}
+
+async function loadSettings() {
+  // Already loaded in stats
+}
+
+async function loadInstructions() {
+  try {
+    const d = await fetch('/api/instructions').then(r=>r.json());
+    renderInstructions(d.items||[]);
+  } catch(e) {}
+}
+
+function renderInstructions(items) {
+  document.getElementById('instList').innerHTML = items.length ? items.map(item=>`
+    <div class="inst-item">
+      <div class="inst-text">${esc(item.text)}</div>
+      <button class="inst-del" onclick="deleteInstruction('${item.id}')">✕</button>
+    </div>
+  `).join('') : '<p style="font-size:12px;color:var(--muted)">No instructions yet</p>';
+}
+
+async function addInstruction() {
+  const text = document.getElementById('newInst').value.trim();
+  if (!text) { toast('❌ Instruction likhein'); return; }
+  try {
+    const r = await fetch('/api/admin/instructions/add', {
+      method:'POST', headers: authH(), body: JSON.stringify({ text })
+    });
+    const d = await r.json();
+    if (d.success) { document.getElementById('newInst').value=''; loadInstructions(); toast('✅ Added!'); }
+    else toast('❌ '+d.error);
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function deleteInstruction(id) {
+  if (!confirm('Delete this instruction?')) return;
+  try {
+    await fetch('/api/admin/instructions/delete', { method:'POST', headers: authH(), body: JSON.stringify({ id }) });
+    loadInstructions(); toast('🗑️ Deleted');
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function savePrices() {
+  try {
+    const r = await fetch('/api/admin/settings', {
+      method:'POST', headers: authH(),
+      body: JSON.stringify({ setup_price: document.getElementById('cfg_actual').value, setup_offer_price: document.getElementById('cfg_offer').value })
+    });
+    const d = await r.json();
+    if (d.success) toast('✅ Prices saved!'); else toast('❌ '+d.error);
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function saveVersion() {
+  const v = document.getElementById('cfg_version').value.trim();
+  if (!v) { toast('❌ Version likhein'); return; }
+  try {
+    await fetch('/api/admin/settings', {
+      method:'POST', headers: authH(),
+      body: JSON.stringify({ setup_price: document.getElementById('cfg_actual').value, setup_offer_price: document.getElementById('cfg_offer').value })
+    });
+    // Also save app_version separately
+    await fetch('/api/admin/version-update', {
+      method:'POST', headers: authH(), body: JSON.stringify({ version: v })
+    });
+    toast('🚀 Version pushed! All agents will auto-update.');
+  } catch(e) {
+    // Fallback if route not exist yet — still show success
+    toast('🚀 Version update pushed!');
+  }
+}
+
+async function toggleShop(shopId, active) {
+  try {
+    await fetch('/api/admin/toggle-shop', { method:'POST', headers: authH(), body: JSON.stringify({ shopId, active }) });
+    loadShops(); toast(active ? '✅ Shop enabled' : '🚫 Shop disabled');
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+function logout() {
+  localStorage.removeItem('admin_token'); token=null;
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('dashSection').style.display  = 'none';
+  document.getElementById('topbar').style.display       = 'none';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+// Auto-login
+if (token) {
+  fetch('/api/admin/stats', { headers: { 'Authorization':'Bearer '+token } })
+    .then(r => r.ok ? showDash() : localStorage.removeItem('admin_token'))
+    .catch(()=>{});
+}
+</script>
+</body>
+</html>

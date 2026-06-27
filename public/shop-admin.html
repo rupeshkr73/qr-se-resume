@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shop Admin — QR Se Resume</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f0f4ff;--white:#fff;--border:#dde4f0;--text:#0d1b2a;--muted:#6b7a99;--primary:#2563eb;--primary-l:#eff4ff;--green:#16a34a;--green-l:#f0fdf4;--r:12px;--rl:18px}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh}
+.topbar{background:#0d1b2a;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px}
+.shop-badge{background:rgba(255,255,255,.1);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;color:#fff;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout-btn{background:#ef4444;border:none;color:#fff;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.wrap{max-width:520px;margin:0 auto;padding:14px 14px 80px}
+/* Login */
+.login-center{display:flex;flex-direction:column;align-items:center;padding:30px 14px}
+.login-card{background:var(--white);border-radius:var(--rl);padding:24px;border:1px solid var(--border);width:100%;max-width:420px}
+.login-card h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:800;margin-bottom:3px}
+.login-sub{font-size:11px;color:var(--muted);margin-bottom:18px}
+.fg{margin-bottom:11px}
+.fl{font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.fi{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border .2s;background:#fff}
+.fi:focus{border-color:var(--primary)}
+textarea.fi{resize:vertical;min-height:60px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn{width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px}
+.btn-p{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff}
+.btn-g{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff}
+.btn-b{background:var(--bg);color:var(--muted);font-size:12px;padding:9px}
+.btn:hover{opacity:.92}
+/* Cards */
+.card{background:var(--white);border-radius:var(--rl);padding:15px;margin-bottom:12px;border:1px solid var(--border)}
+.card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{background:var(--white);border-radius:var(--rl);padding:13px;border:1px solid var(--border)}
+.stat.a1{background:linear-gradient(135deg,#2563eb,#7c3aed);border:none}
+.stat.a2{background:linear-gradient(135deg,#16a34a,#22c55e);border:none}
+.stat-label{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.stat.a1 .stat-label,.stat.a2 .stat-label{color:rgba(255,255,255,.6)}
+.stat-val{font-size:22px;font-weight:800;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif}
+.stat.a1 .stat-val,.stat.a2 .stat-val{color:#fff}
+/* Shop ID box */
+.id-box{background:#0d1b2a;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.id-val{font-family:monospace;font-size:15px;font-weight:800;color:#4ade80;letter-spacing:1px}
+.copy-btn{background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer}
+/* QR */
+.qr-box{text-align:center;margin-bottom:12px}
+.qr-img{width:160px;height:160px;border:3px solid var(--primary);border-radius:12px;object-fit:contain;margin:0 auto 10px}
+/* Download buttons */
+.dl-btn{display:flex;align-items:center;gap:10px;padding:13px 15px;border-radius:12px;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;color:#fff;transition:.2s;text-decoration:none;width:100%;margin-bottom:9px}
+.dl-btn:hover{transform:translateY(-1px);opacity:.93}
+.dl-qr{background:#16a34a}
+.dl-agent{background:#2563eb}
+.dl-py{background:#f59e0b}
+.dl-sumatra{background:#7c3aed}
+.dl-readme{background:#6b7280}
+/* Instructions */
+.inst-item{background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px;font-size:12px;line-height:1.6;color:var(--text)}
+/* Pay opts */
+.pay-opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px}
+.pay-opt{border:2px solid var(--border);border-radius:9px;padding:9px 6px;text-align:center;cursor:pointer;transition:.2s;background:#fff;font-size:10px;font-weight:700;color:var(--text)}
+.pay-opt.sel{border-color:var(--primary);background:var(--primary-l);color:var(--primary)}
+.save-btn{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;border-radius:10px;padding:12px;width:100%;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px}
+.home-btn{display:block;text-align:center;padding:11px;background:var(--bg);border-radius:10px;color:var(--muted);font-weight:600;font-size:13px;text-decoration:none;margin-top:8px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(80px);background:#0d1b2a;color:#fff;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;z-index:300;transition:.3s cubic-bezier(.175,.885,.32,1.275)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar" style="display:none">
+  <div class="brand">📄 Shop Admin</div>
+  <div style="display:flex;align-items:center;gap:9px">
+    <div class="shop-badge" id="topShopName">Shop</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginSection">
+  <div class="login-center">
+    <div style="text-align:center;padding:28px 0 18px">
+      <div style="font-size:40px;margin-bottom:10px">📄</div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800">QR Se Resume</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Shop Owner Login</div>
+    </div>
+    <div class="login-card">
+      <h2>🔑 Login</h2>
+      <div class="login-sub">Shop ID aur password daalo</div>
+      <div class="fg"><label class="fl">Shop ID</label><input class="fi" id="l_shopid" placeholder="RSHOP_XXXXXXXX" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="l_pass" placeholder="Aapka password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-p" onclick="doLogin()">🔑 Login</button>
+      <a href="/" class="btn btn-b" style="text-decoration:none">🏠 Home</a>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashSection" style="display:none">
+<div class="wrap">
+
+  <!-- Shop ID -->
+  <div class="id-box">
+    <div>
+      <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px">YOUR SHOP ID</div>
+      <div class="id-val" id="dashShopId">RSHOP_XXXXXXXX</div>
+    </div>
+    <button class="copy-btn" onclick="copyId()">📋 Copy</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat a1"><div class="stat-label">Today Orders</div><div class="stat-val" id="todayO">—</div></div>
+    <div class="stat a2"><div class="stat-label">Today Earnings</div><div class="stat-val" id="todayE">—</div></div>
+    <div class="stat"><div class="stat-label">Total Orders</div><div class="stat-val" id="totalO">—</div></div>
+    <div class="stat"><div class="stat-label">Total Earnings</div><div class="stat-val" id="totalE">—</div></div>
+  </div>
+
+  <!-- QR Code + Downloads -->
+  <div class="card">
+    <h3>📱 QR Code & Downloads</h3>
+    <div class="qr-box">
+      <img id="qrImg" class="qr-img" src="" alt="QR">
+    </div>
+    <a id="dlQR" class="dl-btn dl-qr" download>⬇️ QR Code Download Karo</a>
+    <a id="dlAgent" class="dl-btn dl-agent" download>⬇️ Print Agent Download Karo</a>
+    <div style="background:#f8faff;border-radius:10px;padding:11px;margin-bottom:9px">
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:7px">📥 Must Install Software</div>
+      <a href="https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" class="dl-btn dl-py" target="_blank" style="margin-bottom:7px">🐍 Python 3.12 Download</a>
+      <a href="https://www.sumatrapdfreader.org/dl/rel/3.5.2/SumatraPDF-3.5.2-64-install.exe" class="dl-btn dl-sumatra" target="_blank" style="margin-bottom:0">📄 SumatraPDF Download</a>
+    </div>
+    <a id="dlReadme" href="/downloads/README.txt" class="dl-btn dl-readme" download="README.txt">📋 README Instructions</a>
+  </div>
+
+  <!-- Instructions from Super Admin -->
+  <div class="card" id="instCard" style="display:none">
+    <h3>📋 Instructions</h3>
+    <div id="instList"></div>
+  </div>
+
+  <!-- Update Settings -->
+  <div class="card">
+    <h3>⚙️ Update Shop Details</h3>
+    <div class="fg"><label class="fl">Shop Name</label><input class="fi" id="e_name" placeholder="Shop name"></div>
+    <div class="fg"><label class="fl">Address</label><input class="fi" id="e_addr" placeholder="Address"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Mobile</label><input class="fi" id="e_phone" placeholder="Phone"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="e_email" placeholder="Email"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">B&W Rate (₹)</label><input type="number" class="fi" id="e_bw"></div>
+      <div class="fg"><label class="fl">Color Rate (₹)</label><input type="number" class="fi" id="e_color"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Customer Payment Options</label>
+      <div class="pay-opts">
+        <div class="pay-opt" onclick="selPayE('both')" id="ep_both">💳🏪 Both</div>
+        <div class="pay-opt" onclick="selPayE('counter')" id="ep_counter">🏪 Counter</div>
+        <div class="pay-opt" onclick="selPayE('online')" id="ep_online">💳 Online</div>
+      </div>
+      <input type="hidden" id="e_paymode">
+    </div>
+    <div class="fg"><label class="fl">Razorpay Key ID</label><input class="fi" id="e_rzp_id" placeholder="rzp_live_..."></div>
+    <div class="fg"><label class="fl">Razorpay Key Secret <span style="color:var(--muted);font-weight:400">(change karna ho to hi daalo)</span></label><input type="password" class="fi" id="e_rzp_sec" placeholder="Leave blank = no change"></div>
+    <div class="fg"><label class="fl">PhonePe Merchant Key</label><input class="fi" id="e_pp_key" placeholder="PhonePe key (optional)"></div>
+    <div style="height:4px"></div>
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px;margin-bottom:10px;font-size:11px;color:#92400e">🔒 Printer list aur settings Print Agent mein change hoti hain — EXE se manage hoti hai.</div>
+    <button class="save-btn" onclick="saveSettings()">💾 Save All Changes</button>
+  </div>
+
+  <!-- Change Password -->
+  <div class="card">
+    <h3>🔑 Change Password</h3>
+    <div class="fg"><label class="fl">New Password</label><input type="password" class="fi" id="e_pass" placeholder="Naya password (6+ characters)"></div>
+    <div class="fg"><label class="fl">Confirm Password</label><input type="password" class="fi" id="e_pass2" placeholder="Dobara likhein"></div>
+    <button class="save-btn" onclick="changePassword()" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">🔑 Password Change Karo</button>
+  </div>
+
+  <a href="/" class="home-btn">🏠 Home</a>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let token = localStorage.getItem('shop_token');
+let shopData = null;
+
+async function doLogin() {
+  const shopId = document.getElementById('l_shopid').value.trim().toUpperCase();
+  const pass   = document.getElementById('l_pass').value;
+  if (!shopId || !pass) { toast('❌ Shop ID aur password daalo'); return; }
+  try {
+    const r = await fetch('/api/shop/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ shopId, password: pass })
+    });
+    const d = await r.json();
+    if (!d.success) { toast('❌ '+(d.error||'Login failed')); return; }
+    token = d.token; shopData = d.shop;
+    localStorage.setItem('shop_token', token);
+    showDash();
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+function showDash() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('dashSection').style.display  = 'block';
+  document.getElementById('topbar').style.display       = 'flex';
+  loadAll();
+}
+
+function authH() { return { 'Content-Type':'application/json','Authorization':'Bearer '+token }; }
+
+async function loadAll() {
+  try {
+    const r = await fetch('/api/shop/me', { headers: authH() });
+    if (r.status===401) { logout(); return; }
+    shopData = await r.json();
+    document.getElementById('dashShopId').textContent   = shopData.id;
+    document.getElementById('topShopName').textContent  = shopData.name;
+    // Fill form
+    document.getElementById('e_name').value   = shopData.name||'';
+    document.getElementById('e_addr').value   = shopData.address||'';
+    document.getElementById('e_phone').value  = shopData.phone||'';
+    document.getElementById('e_email').value  = shopData.email||'';
+    document.getElementById('e_bw').value     = shopData.price_bw||10;
+    document.getElementById('e_color').value  = shopData.price_color||20;
+    document.getElementById('e_rzp_id').value = shopData.rzp_key_id||'';
+    document.getElementById('e_pp_key').value = shopData.phonepay_key||'';
+    selPayE(shopData.payment_mode||'both');
+    // QR
+    if (shopData.qr_code) {
+      document.getElementById('qrImg').src = shopData.qr_code;
+      const dlQR = document.getElementById('dlQR');
+      dlQR.href = shopData.qr_code;
+      dlQR.download = `QR_${shopData.id}.png`;
+    }
+    // Agent download link with shopId
+    document.getElementById('dlAgent').href = `/downloads/print_agent.py?shopId=${shopData.id}`;
+    document.getElementById('dlAgent').setAttribute('download','print_agent.py');
+    // Stats
+    const s = await fetch('/api/shop/'+shopData.id+'/stats').then(x=>x.json());
+    document.getElementById('todayO').textContent = s.today_orders||0;
+    document.getElementById('todayE').textContent = '₹'+(s.today_earnings||0);
+    document.getElementById('totalO').textContent = s.total_orders||0;
+    document.getElementById('totalE').textContent = '₹'+(s.total_earnings||0);
+    // Instructions
+    loadInstructions();
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function loadInstructions() {
+  try {
+    const d = await fetch('/api/instructions').then(r=>r.json());
+    if (d.items && d.items.length) {
+      document.getElementById('instCard').style.display = 'block';
+      document.getElementById('instList').innerHTML = d.items.map(i=>`
+        <div class="inst-item">📌 ${esc(i.text)}</div>
+      `).join('');
+    }
+  } catch{}
+}
+
+function selPayE(mode) {
+  ['both','counter','online'].forEach(m => document.getElementById('ep_'+m).classList.toggle('sel',m===mode));
+  document.getElementById('e_paymode').value = mode;
+}
+
+async function saveSettings() {
+  try {
+    const body = {
+      name:         document.getElementById('e_name').value.trim(),
+      address:      document.getElementById('e_addr').value.trim(),
+      phone:        document.getElementById('e_phone').value.trim(),
+      email:        document.getElementById('e_email').value.trim(),
+      price_bw:     parseInt(document.getElementById('e_bw').value)||10,
+      price_color:  parseInt(document.getElementById('e_color').value)||20,
+      payment_mode: document.getElementById('e_paymode').value,
+      rzp_key_id:   document.getElementById('e_rzp_id').value.trim(),
+      rzp_key_secret: document.getElementById('e_rzp_sec').value,
+      phonepay_key: document.getElementById('e_pp_key').value.trim()
+    };
+    const r = await fetch('/api/shop/update', { method:'POST', headers: authH(), body: JSON.stringify(body) });
+    const d = await r.json();
+    d.success ? toast('✅ Settings saved!') : toast('❌ '+(d.error||'Failed'));
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function changePassword() {
+  const p1 = document.getElementById('e_pass').value;
+  const p2 = document.getElementById('e_pass2').value;
+  if (!p1) { toast('❌ Password daalo'); return; }
+  if (p1 !== p2) { toast('❌ Password match nahi kar raha!'); return; }
+  if (p1.length < 6) { toast('❌ 6+ characters chahiye'); return; }
+  try {
+    const r = await fetch('/api/shop/update', { method:'POST', headers: authH(), body: JSON.stringify({ password: p1 }) });
+    const d = await r.json();
+    if (d.success) { toast('✅ Password changed!'); document.getElementById('e_pass').value=''; document.getElementById('e_pass2').value=''; }
+    else toast('❌ '+d.error);
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+function copyId() {
+  navigator.clipboard.writeText(document.getElementById('dashShopId').textContent).then(()=>toast('📋 Copied!'));
+}
+
+function logout() {
+  localStorage.removeItem('shop_token'); token=null; shopData=null;
+  document.getElementById('loginSection').style.display='block';
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('topbar').style.display='none';
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+// Also need to get qr_code in /api/shop/me
+if (token) {
+  fetch('/api/shop/me',{headers:{'Authorization':'Bearer '+token}})
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{if(d){shopData=d;showDash();}else localStorage.removeItem('shop_token');})
+    .catch(()=>{});
+}
+</script>
+</body>
+</html>

@@ -1,52 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>QR Se Resume Banao</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f6f8fc;color:#0d1b2a;min-height:100vh}
-.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 50%,#7c3aed 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
-.hero-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:24px;backdrop-filter:blur(4px)}
-.hero h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(36px,7vw,72px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px}
-.hero h1 span{color:#fbbf24}
-.hero p{font-size:18px;color:rgba(255,255,255,.75);max-width:520px;line-height:1.7;margin-bottom:36px}
-.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-.btn-hero-primary{background:#fff;color:#2563eb;padding:14px 32px;border-radius:12px;font-weight:700;font-size:16px;border:none;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
-.btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
-.btn-hero-outline{background:transparent;color:#fff;padding:14px 32px;border-radius:12px;font-weight:700;font-size:16px;border:2px solid rgba(255,255,255,.4);cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
-.btn-hero-outline:hover{background:rgba(255,255,255,.1)}
-.steps-row{display:flex;gap:24px;margin-top:56px;flex-wrap:wrap;justify-content:center}
-.step-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:14px 20px;color:#fff;text-align:center;min-width:120px;backdrop-filter:blur(4px)}
-.step-num{font-size:24px;margin-bottom:6px}
-.step-txt{font-size:12px;font-weight:600;opacity:.8}
-.footer{text-align:center;color:rgba(255,255,255,.4);font-size:12px;margin-top:40px;position:relative;z-index:1}
-.footer a{color:rgba(255,255,255,.6);text-decoration:none}
+body{font-family:'Inter',sans-serif;background:#f0f4ff;min-height:100vh}
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 50%,#7c3aed 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+
+/* Top bar */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:flex-end;padding:12px 20px;gap:10px}
+.shop-login-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;backdrop-filter:blur(4px);transition:.2s}
+.shop-login-btn:hover{background:rgba(255,255,255,.25)}
+
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:24px;backdrop-filter:blur(4px)}
+h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(34px,7vw,68px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:16px}
+h1 span{color:#fbbf24}
+.sub{font-size:16px;color:rgba(255,255,255,.7);max-width:500px;line-height:1.7;margin-bottom:10px}
+
+/* Price */
+.price-box{background:rgba(0,0,0,.3);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px 28px;margin-bottom:28px;display:inline-block}
+.price-actual{font-size:16px;color:rgba(255,255,255,.4);text-decoration:line-through;margin-bottom:2px}
+.price-offer{font-size:36px;font-weight:900;color:#4ade80;font-family:'Plus Jakarta Sans',sans-serif;line-height:1}
+.price-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px}
+
+.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:36px}
+.btn-main{background:#fff;color:#2563eb;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;border:none;cursor:pointer;transition:.2s;text-decoration:none;font-family:'Inter',sans-serif}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.btn-outline{background:transparent;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;border:2px solid rgba(255,255,255,.35);cursor:pointer;transition:.2s;text-decoration:none;font-family:'Inter',sans-serif}
+.btn-outline:hover{background:rgba(255,255,255,.1)}
+
+.steps{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+.step{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 18px;color:#fff;text-align:center;min-width:100px;backdrop-filter:blur(4px)}
+.step-num{font-size:22px;margin-bottom:5px}
+.step-txt{font-size:11px;font-weight:600;opacity:.75}
+
+.features{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+.feat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 14px;color:rgba(255,255,255,.8);font-size:11px;font-weight:600}
+
+.footer{color:rgba(255,255,255,.35);font-size:11px;position:relative;z-index:1}
+.footer a{color:rgba(255,255,255,.5);text-decoration:none}
 .footer a:hover{color:#fff}
+.insta-link{display:inline-flex;align-items:center;gap:5px;margin-top:5px}
+.super-admin-link{display:block;margin-top:14px;font-size:10px;color:rgba(255,255,255,.2);text-decoration:none}
+.super-admin-link:hover{color:rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
+
+<div class="topbar">
+  <a href="/shop-admin" class="shop-login-btn">🔑 Shop Owner Login</a>
+</div>
+
 <div class="hero">
-  <div class="hero-badge">📄 QR Se Resume Banao — v2.0</div>
-  <h1>Ek QR Scan<br>Aur Resume <span>Ready!</span></h1>
-  <p>Apni dukaan pe QR lagao, customer scan karein, details bharein, PDF ban jaaye aur automatically print ho jaaye.</p>
-  <div class="hero-btns">
-    <button class="btn-hero-primary" onclick="window.location='/dashboard'">🏪 Admin Dashboard</button>
-    <button class="btn-hero-outline" onclick="alert('QR code scan karo ya /resume/SHOP_ID pe jao')">📱 Customer View Demo</button>
+  <div class="badge">📄 QR Se Resume Banao — v2.1</div>
+  <h1>Ek QR Scan<br>Resume <span>Ready!</span></h1>
+  <p class="sub">Customer QR scan kare, details bhare, PDF bane aur automatically print ho jaye!</p>
+
+  <div class="price-box">
+    <div class="price-actual" id="actualPrice">₹999</div>
+    <div class="price-offer" id="offerPrice">₹499</div>
+    <div class="price-sub">One-time setup • Lifetime use</div>
   </div>
-  <div class="steps-row">
-    <div class="step-pill"><div class="step-num">📱</div><div class="step-txt">QR Scan</div></div>
-    <div class="step-pill"><div class="step-num">📝</div><div class="step-txt">Details Bharein</div></div>
-    <div class="step-pill"><div class="step-num">👁</div><div class="step-txt">Preview</div></div>
-    <div class="step-pill"><div class="step-num">💳</div><div class="step-txt">Pay</div></div>
-    <div class="step-pill"><div class="step-num">🖨️</div><div class="step-txt">Auto Print</div></div>
+
+  <div class="btns">
+    <a href="/setup" class="btn-main">🚀 Abhi Suru Karein</a>
+    <a href="/shop-admin" class="btn-outline">🔑 Shop Login</a>
   </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">📱</div><div class="step-txt">QR Scan</div></div>
+    <div class="step"><div class="step-num">📝</div><div class="step-txt">Details Bharein</div></div>
+    <div class="step"><div class="step-num">👁</div><div class="step-txt">Preview</div></div>
+    <div class="step"><div class="step-num">💳</div><div class="step-txt">Pay</div></div>
+    <div class="step"><div class="step-num">🖨️</div><div class="step-txt">Auto Print</div></div>
+  </div>
+
+  <div class="features">
+    <div class="feat">✅ No Monthly Fee</div>
+    <div class="feat">✅ Auto Print</div>
+    <div class="feat">✅ Online Payment</div>
+    <div class="feat">✅ QR Code</div>
+    <div class="feat">✅ Auto Update</div>
+  </div>
+
   <div class="footer">
-    <p>© 2026 All Rights Reserved | Developed by <a href="https://instagram.com/rupeshkr73" target="_blank">Rupesh Kumar Mahato</a></p>
+    <p>© 2026 All Rights Reserved | Developed by Rupesh Kumar Mahato</p>
+    <a href="https://instagram.com/rupeshkr73" target="_blank" class="insta-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;flex-shrink:0"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" fill="#fff"/><circle cx="15.8" cy="8.2" r="1" fill="#fff"/><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
+    </a>
+    <a href="/super-admin" class="super-admin-link">⚙</a>
   </div>
 </div>
+
+<script>
+async function loadPrices() {
+  try {
+    const cfg = await fetch('/api/settings').then(r=>r.json());
+    if (cfg.setup_price)       document.getElementById('actualPrice').textContent = '₹'+cfg.setup_price;
+    if (cfg.setup_offer_price) document.getElementById('offerPrice').textContent  = '₹'+cfg.setup_offer_price;
+  } catch{}
+}
+loadPrices();
+</script>
 </body>
 </html>
