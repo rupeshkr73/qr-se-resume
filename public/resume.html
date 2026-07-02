@@ -552,24 +552,23 @@ textarea.fi{resize:vertical;min-height:65px}
       <button type="button" onclick="addCertField()" style="width:100%;padding:8px;border-radius:8px;border:1.5px dashed var(--primary);background:var(--primary-l);color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;margin-top:4px">+ Certificate Add Karo</button>
     </div>
 
-    <!-- Interests — dropdown -->
+    <!-- Interests — multi-select chips -->
     <div class="fg">
-      <div class="fl">Interests / Hobbies</div>
-      <select class="fi" id="f_hobbies_select" onchange="onHobbySelect()">
-        <option value="">— Select —</option>
-        <option value="Reading">Reading</option>
-        <option value="Traveling">Traveling</option>
-        <option value="Playing Cricket">Playing Cricket</option>
-        <option value="Listening to Music">Listening to Music</option>
-        <option value="Watching Movies">Watching Movies</option>
-        <option value="Cooking">Cooking</option>
-        <option value="Photography">Photography</option>
-        <option value="Yoga & Fitness">Yoga & Fitness</option>
-        <option value="Drawing / Painting">Drawing / Painting</option>
-        <option value="Browsing Internet">Browsing Internet</option>
-        <option value="__other__">Other (Likho)</option>
-      </select>
-      <input class="fi" id="f_hobbies_other" placeholder="Apna interest likhein" style="display:none;margin-top:8px" oninput="document.getElementById('f_hobbies').value=this.value">
+      <div class="fl">Interests / Hobbies <span style="color:var(--muted);font-weight:400;font-size:10px">(Multiple select kar sakte ho)</span></div>
+      <div class="chips" id="hobbyChips">
+        <div class="chip" onclick="toggleHobby(this,'Reading')">Reading</div>
+        <div class="chip" onclick="toggleHobby(this,'Traveling')">Traveling</div>
+        <div class="chip" onclick="toggleHobby(this,'Playing Cricket')">Playing Cricket</div>
+        <div class="chip" onclick="toggleHobby(this,'Listening to Music')">Listening to Music</div>
+        <div class="chip" onclick="toggleHobby(this,'Watching Movies')">Watching Movies</div>
+        <div class="chip" onclick="toggleHobby(this,'Cooking')">Cooking</div>
+        <div class="chip" onclick="toggleHobby(this,'Photography')">Photography</div>
+        <div class="chip" onclick="toggleHobby(this,'Yoga & Fitness')">Yoga & Fitness</div>
+        <div class="chip" onclick="toggleHobby(this,'Drawing / Painting')">Drawing / Painting</div>
+        <div class="chip" onclick="toggleHobby(this,'Browsing Internet')">Browsing Internet</div>
+        <div class="chip" onclick="toggleHobby(this,'__other__')">Other (Likho)</div>
+      </div>
+      <input class="fi" id="f_hobbies_other" placeholder="Apna interest likhein" style="display:none;margin-top:8px" oninput="syncHobbies()">
       <input type="hidden" id="f_hobbies">
     </div>
     <button class="btn btn-p" onclick="nxt('D')">Aage →</button>
@@ -676,6 +675,7 @@ textarea.fi{resize:vertical;min-height:65px}
     </div>
     <div style="text-align:center;font-size:10px;color:rgba(255,255,255,.3);margin-top:8px">Payment ke baad automatic print hoga 🖨️</div>
   </div>
+  <button class="btn btn-b" onclick="goStep(3)">← Wapas Preview Pe</button>
 </div>
 
 <!-- ══ SUCCESS ══ -->
@@ -692,10 +692,9 @@ textarea.fi{resize:vertical;min-height:65px}
 <!-- Footer -->
 <div class="footer">
   <p>© 2026 All Rights Reserved | This System is Developed by Rupesh Kumar Mahato</p>
-  <p style="margin-top:4px">
-    <a href="https://instagram.com/rupeshkr73" target="_blank">
-      <svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" fill="#fff"/><circle cx="15.8" cy="8.2" r="1" fill="#fff"/><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
-      @rupeshkr73 on Instagram
+  <p style="margin-top:6px">
+    <a href="https://instagram.com/rupeshkr73" target="_blank" style="display:inline-block">
+      <svg width="22" height="22" viewBox="0 0 24 24"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" fill="#fff"/><circle cx="15.8" cy="8.2" r="1" fill="#fff"/><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
     </a>
   </p>
 </div>
@@ -974,19 +973,40 @@ function getCertifications() {
 }
 
 // ══════════════════════════════════════════════
-// HOBBIES DROPDOWN
+// HOBBIES — MULTI-SELECT CHIPS
 // ══════════════════════════════════════════════
-function onHobbySelect() {
-  const sel = gv('f_hobbies_select');
-  const otherInput = document.getElementById('f_hobbies_other');
-  if (sel === '__other__') {
-    otherInput.style.display = 'block';
-    otherInput.focus();
-    document.getElementById('f_hobbies').value = '';
-  } else {
-    otherInput.style.display = 'none';
-    document.getElementById('f_hobbies').value = sel;
+let selectedHobbies = [];
+
+function toggleHobby(el, val) {
+  if (val === '__other__') {
+    el.classList.toggle('on');
+    const otherInput = document.getElementById('f_hobbies_other');
+    if (el.classList.contains('on')) {
+      otherInput.style.display = 'block';
+      otherInput.focus();
+    } else {
+      otherInput.style.display = 'none';
+      otherInput.value = '';
+    }
+    syncHobbies();
+    return;
   }
+  const idx = selectedHobbies.indexOf(val);
+  if (idx > -1) {
+    selectedHobbies.splice(idx, 1);
+    el.classList.remove('on');
+  } else {
+    selectedHobbies.push(val);
+    el.classList.add('on');
+  }
+  syncHobbies();
+}
+
+function syncHobbies() {
+  const list = selectedHobbies.slice();
+  const other = gv('f_hobbies_other');
+  if (other) list.push(other);
+  document.getElementById('f_hobbies').value = list.join(', ');
 }
 
 // ══════════════════════════════════════════════
@@ -1105,15 +1125,21 @@ function collect() {
 
 function buildAddressString() {
   const type = gv('f_addrtype');
+  let line1, line2;
   if (type === 'village') {
-    return [gv('a_vill'), 'PO: '+gv('a_po'), 'PS: '+gv('a_ps'), gv('a_dist'), gv('a_state'), gv('a_pin')]
-      .filter(p => p && p !== 'PO: ' && p !== 'PS: ').join(', ');
+    line1 = ['Vill: '+gv('a_vill'), 'PO: '+gv('a_po'), 'PS: '+gv('a_ps')]
+      .filter(p => p && !p.endsWith(': ')).join(', ');
+    line2 = [gv('a_dist')?('Dist: '+gv('a_dist')):'', gv('a_state')?('State: '+gv('a_state')):'', gv('a_pin')?('Pin: '+gv('a_pin')):'']
+      .filter(Boolean).join(', ');
   } else {
-    const parts = [];
-    if (gv('a_hno')) parts.push('H.No '+gv('a_hno'));
-    parts.push(gv('a_city'), 'PO: '+gv('a_cpo'), 'PS: '+gv('a_cps'), gv('a_cdist'), gv('a_cstate'), gv('a_cpin'));
-    return parts.filter(p => p && p !== 'PO: ' && p !== 'PS: ').join(', ');
+    const p1 = [];
+    if (gv('a_hno')) p1.push('H.No '+gv('a_hno'));
+    p1.push('City: '+gv('a_city'), 'PO: '+gv('a_cpo'), 'PS: '+gv('a_cps'));
+    line1 = p1.filter(p => p && !p.endsWith(': ')).join(', ');
+    line2 = [gv('a_cdist')?('Dist: '+gv('a_cdist')):'', gv('a_cstate')?('State: '+gv('a_cstate')):'', gv('a_cpin')?('Pin: '+gv('a_cpin')):'']
+      .filter(Boolean).join(', ');
   }
+  return line2 ? (line1 + '\n' + line2) : line1;
 }
 
 // ══════════════════════════════════════════════
@@ -1149,6 +1175,11 @@ function eduRows(d) {
   if(d.e10.board) rows.push({name:'Matriculation',board:d.e10.board,year:d.e10.year,div:d.e10.div,pct:d.e10.pct});
   if(d.e12.board) rows.push({name:'Intermediate (I.Sc/I.Com/I.A)',board:d.e12.board,year:d.e12.year,div:d.e12.div,pct:d.e12.pct});
   if(d.eg.course) rows.push({name:d.eg.course,board:d.eg.board,year:d.eg.year,div:d.eg.div,pct:d.eg.pct});
+  return rows;
+}
+
+function techRows(d) {
+  const rows=[];
   d.extra.forEach(ex=>{if(ex.course)rows.push({name:ex.course,board:ex.board,year:ex.year,div:ex.div,pct:ex.pct});});
   return rows;
 }
@@ -1221,9 +1252,9 @@ async function buildT1(doc,d){
   for(const [lbl,val] of pInfo){
     doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);
     doc.text(lbl,M,y);
-    doc.setFont('helvetica','normal');
+    doc.setFont(lbl==='NAME'?'helvetica':'helvetica', lbl==='NAME'?'bold':'normal');
     doc.text(':',M+42,y);
-    const lines=doc.splitTextToSize(val||'',d.photo&&y<72?W-M-58:W-M-50);
+    const lines=doc.splitTextToSize(val||'',d.photo&&y<68?92:135);
     doc.text(lines,M+47,y);
     y+=lines.length*5.5;
     if(y>260) break;
@@ -1252,8 +1283,12 @@ async function buildT1(doc,d){
   // Education table
   y=drawEduTable(doc,eduRows(d),M,y,W-M*2,30,58,138)+3;
 
-  // Extra Qualifications
-  if(d.extra.length>0&&false){} // already in table
+  // Technical / Extra Qualification — separate section
+  if(techRows(d).length){
+    doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);
+    doc.text('TECHNICAL / EXTRA QUALIFICATION :',W/2,y,{align:'center'});y+=5;
+    y=drawEduTable(doc,techRows(d),M,y,W-M*2,30,58,138)+3;
+  }
 
   doc.setLineWidth(.3);doc.line(M,y,W-M,y);y+=4;
 
@@ -1294,8 +1329,7 @@ async function buildT1(doc,d){
   doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);
   doc.text('DECLARATION',M,y);y+=5;
   doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(40,40,40);
-  doc.text('I hereby declare that all the information furnished above is true to the best of my knowledge.',M,y,{maxWidth:W-M*2});
-  y+=10;
+  y=wt(doc,'I hereby declare that all the information, facts and details furnished above are true, complete and correct to the best of my knowledge and belief. In case any information is found to be false or incorrect at any stage, I shall be liable for appropriate action and my candidature or appointment is liable to be cancelled or terminated without prior notice.',M,y,W-M*2,4.3)+6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
   doc.text('Date: '+(d.decdate||'___________'),M,y);
   doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);
@@ -1330,7 +1364,8 @@ async function buildT2(doc,d){
   }
   // Address
   doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);doc.text('Address',M,y);
-  doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);doc.text(': '+d.addr,M+28,y,{maxWidth:W-M*2-30});y+=10;
+  doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
+  y=wt(doc,': '+d.addr,M+28,y,W-M*2-30,4.6)+4;
 
   doc.setDrawColor(30,58,95);doc.setLineWidth(.4);doc.line(M,y,W-M,y);y+=4;
 
@@ -1348,6 +1383,14 @@ async function buildT2(doc,d){
   doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
   doc.text('EDUCATIONAL QUALIFICATION',W/2,y+4,{align:'center'});y+=8;
   y=drawEduTable(doc,eduRows(d),M,y,W-M*2,30,58,95)+3;
+
+  // Technical / Extra Qualification — separate section
+  if(techRows(d).length){
+    doc.setFillColor(30,58,95);doc.rect(M,y,W-M*2,6,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('TECHNICAL / EXTRA QUALIFICATION',W/2,y+4,{align:'center'});y+=8;
+    y=drawEduTable(doc,techRows(d),M,y,W-M*2,30,58,95)+3;
+  }
 
   doc.setDrawColor(30,58,95);doc.setLineWidth(.3);doc.line(M,y,W-M,y);y+=4;
 
@@ -1374,7 +1417,7 @@ async function buildT2(doc,d){
   // Declaration
   doc.setDrawColor(30,58,95);doc.setLineWidth(.3);doc.line(M,y,W-M,y);y+=4;
   doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
-  doc.text('I hereby declare that all the information furnished above is true to the best of my knowledge.',M,y,{maxWidth:W-M*2});y+=8;
+  y=wt(doc,'I hereby declare that all the information, facts and details furnished above are true, complete and correct to the best of my knowledge and belief. In case any information is found to be false or incorrect at any stage, I shall be liable for appropriate action and my candidature or appointment is liable to be cancelled or terminated without prior notice.',M,y,W-M*2,4.3)+6;
   doc.text('Date: '+(d.decdate||'___________'),M,y);doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);doc.text('Sign: '+(d.sign||d.name),W-M,y,{align:'right'});
   doc.setFillColor(30,58,95);doc.rect(0,H-8,W,8,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
@@ -1441,12 +1484,30 @@ async function buildT3(doc,d){
   });
   my+=3;
 
+  // Technical / Extra Qualification — separate section
+  if(techRows(d).length){
+    my=ms('Technical / Extra Qualification',my);
+    const trows=techRows(d);
+    doc.setFillColor(30,58,95);doc.rect(tx,my,tw,6,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(6);doc.setFont('helvetica','bold');
+    doc.text('Examination',tx+1,my+4);doc.text('Board',tx+38,my+4);doc.text('Year',tx+72,my+4);doc.text('Div',tx+84,my+4);doc.text('%',tx+97,my+4);
+    my+=6;
+    trows.forEach((r,i)=>{
+      if(i%2===0){doc.setFillColor(239,246,255);}else{doc.setFillColor(255,255,255);}
+      doc.rect(tx,my,tw,6.5,'F');
+      doc.setTextColor(30,30,30);doc.setFontSize(7);doc.setFont('helvetica','normal');
+      doc.text(r.name||'',tx+1,my+4.5,{maxWidth:35});doc.text(r.board||'',tx+38,my+4.5,{maxWidth:32});
+      doc.text(r.year||'',tx+72,my+4.5);doc.text(r.div||'',tx+84,my+4.5);doc.text(r.pct||'',tx+97,my+4.5);
+      my+=6.5;
+    });
+    my+=3;
+  }
   if(d.expList && d.expList.length){my=ms('Experience / Education',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);for(const l of d.expList){my=wt(doc,'• '+l,MX+4,my,W-MX-14,4.3)+1;}my+=2;}
   if(d.certList && d.certList.length){my=ms('Certifications / Awards',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);d.certList.forEach((c,ci)=>{my=wt(doc,(ci+1)+'. '+c,MX+4,my,W-MX-14,4.3)+1;});my+=2;}
   if(d.hobbies){my=ms('Interests & Strengths',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);my=wt(doc,d.hobbies,MX+2,my,W-MX-12,4.3)+3;}
   my=ms('Declaration',my);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
-  doc.text('I hereby declare that all information is true to the best of my knowledge.',MX+2,my,{maxWidth:W-MX-12});my+=7;
+  my=wt(doc,'I hereby declare that all the information, facts and details furnished above are true, complete and correct to the best of my knowledge and belief. In case any information is found to be false or incorrect at any stage, I shall be liable for appropriate action and my candidature or appointment is liable to be cancelled or terminated without prior notice.',MX+2,my,W-MX-12,4.2)+5;
   doc.text('Date: '+(d.decdate||'___________'),MX+2,my);doc.text('Place: '+(d.place||''),MX+50,my);doc.text('Sign: '+(d.sign||d.name),W-8,my,{align:'right'});
 }
 
@@ -1478,7 +1539,7 @@ async function buildT4(doc,d){
     doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);doc.text(lbl,M+4,y);
     doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
     doc.text(':',M+42,y);
-    const lines=doc.splitTextToSize(val||'',d.photo&&y<66?W-M*2-45:W-M*2-50);
+    const lines=doc.splitTextToSize(val||'',d.photo&&y<62?93:132);
     doc.text(lines,M+46,y);
     y+=lines.length*5.5;
   }
@@ -1494,6 +1555,11 @@ async function buildT4(doc,d){
   doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);
   doc.text('EDUCATIONAL QUALIFICATION',W/2,y,{align:'center'});y+=5;
   y=drawEduTable(doc,eduRows(d),M+4,y,W-M*2-8,30,58,95)+3;
+  if(techRows(d).length){
+    doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);
+    doc.text('TECHNICAL / EXTRA QUALIFICATION',W/2,y,{align:'center'});y+=5;
+    y=drawEduTable(doc,techRows(d),M+4,y,W-M*2-8,30,58,95)+3;
+  }
   doc.setLineWidth(.3);doc.line(M+4,y,W-M-4,y);y+=4;
   if(d.expList && d.expList.length){
     doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);doc.text('Work Experience / Education',M+4,y);y+=5;
@@ -1507,7 +1573,7 @@ async function buildT4(doc,d){
   doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.setTextColor(30,58,95);doc.text('INTERESTS and STRENGTHS',M+4,y);y+=5;
   doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(0,0,0);y=wt(doc,d.hobbies||'Listening Music, Browsing Internet, Self Motivation',M+4,y,W-M*2-8,4.5)+4;
   doc.setLineWidth(.3);doc.line(M+4,y,W-M-4,y);y+=4;
-  doc.setFontSize(8.5);doc.text('I hereby declare that the information given above is correct and true to the best of my knowledge.',M+4,y,{maxWidth:W-M*2-8});y+=8;
+  doc.setFontSize(8.5);y=wt(doc,'I hereby declare that all the information, facts and details furnished above are true, complete and correct to the best of my knowledge and belief. In case any information is found to be false or incorrect at any stage, I shall be liable for appropriate action and my candidature or appointment is liable to be cancelled or terminated without prior notice.',M+4,y,W-M*2-8,4.3)+6;
   doc.text('Date: '+(d.decdate||'___________'),M+4,y);doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);doc.text('Sign: '+(d.sign||d.name),W-M-4,y,{align:'right'});
 }
 
@@ -1532,7 +1598,8 @@ async function buildT5(doc,d){
     y+=5.5;
   }
   doc.setFont('helvetica','bold');doc.setTextColor(22,101,52);doc.text('Address',M,y);
-  doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(': '+d.addr,M+28,y,{maxWidth:W-M*2-30});y+=9;
+  doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
+  y=wt(doc,': '+d.addr,M+28,y,W-M*2-30,4.6)+3;
 
   function gs(title,yy){
     doc.setFillColor(22,101,52);doc.rect(M,yy,W-M*2,6.5,'F');
@@ -1544,12 +1611,16 @@ async function buildT5(doc,d){
   if(d.obj){y=gs('Professional Summary',y);y=gi(d.obj,y)+3;}
   y=gs('EDUCATIONAL QUALIFICATION',y);
   y=drawEduTable(doc,eduRows(d),M,y,W-M*2,22,101,52)+3;
+  if(techRows(d).length){
+    y=gs('TECHNICAL / EXTRA QUALIFICATION',y);
+    y=drawEduTable(doc,techRows(d),M,y,W-M*2,22,101,52)+3;
+  }
   if(d.expList && d.expList.length){y=gs('Experience Education',y);for(const l of d.expList)y=gi('• '+l,y)+1;y+=2;}
   y=gs('Skills',y);y=gi(d.skills||'',y)+3;
   if(d.certList && d.certList.length){y=gs('Certifications / Awards',y);d.certList.forEach((c,ci)=>{y=gi((ci+1)+'. '+c,y)+1;});y+=2;}
   y=gs('INTERESTS and STRENGTHS',y);y=gi(d.hobbies||'Listening Music, Browsing Internet, Self Motivation',y)+4;
   y=gs('DECLARATION',y);
-  y=gi('I hereby declare that all the information furnished above is true to the best of my knowledge.',y)+5;
+  y=gi('I hereby declare that all the information, facts and details furnished above are true, complete and correct to the best of my knowledge and belief. In case any information is found to be false or incorrect at any stage, I shall be liable for appropriate action and my candidature or appointment is liable to be cancelled or terminated without prior notice.',y)+6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
   doc.text('Date: '+(d.decdate||'___________'),M,y);doc.text('Place: '+(d.place||d.addr.split(',')[0]),M+55,y);doc.text('Sign: '+(d.sign||d.name),W-M,y,{align:'right'});
   doc.setFillColor(22,101,52);doc.rect(0,H-8,W,8,'F');
@@ -1600,11 +1671,28 @@ async function buildT6(doc,d){
     doc.text(r.year||'',tx+72,my+4.5);doc.text(r.div||'',tx+84,my+4.5);doc.text(r.pct||'',tx+97,my+4.5);
     my+=6.5;
   });my+=3;
+  if(techRows(d).length){
+    my=ms('Technical / Extra Qualification',my);
+    const trows=techRows(d);
+    doc.setFillColor(30,58,95);doc.rect(tx,my,tw,6,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(6);doc.setFont('helvetica','bold');
+    doc.text('Examination',tx+1,my+4);doc.text('Board',tx+38,my+4);doc.text('Year',tx+72,my+4);doc.text('Div',tx+84,my+4);doc.text('%',tx+97,my+4);
+    my+=6;
+    trows.forEach((r,i)=>{
+      if(i%2===0){doc.setFillColor(239,246,255);}else{doc.setFillColor(255,255,255);}
+      doc.rect(tx,my,tw,6.5,'F');
+      doc.setTextColor(30,30,30);doc.setFontSize(7);doc.setFont('helvetica','normal');
+      doc.text(r.name||'',tx+1,my+4.5,{maxWidth:35});doc.text(r.board||'',tx+38,my+4.5,{maxWidth:32});
+      doc.text(r.year||'',tx+72,my+4.5);doc.text(r.div||'',tx+84,my+4.5);doc.text(r.pct||'',tx+97,my+4.5);
+      my+=6.5;
+    });
+    my+=3;
+  }
   if(d.expList && d.expList.length){my=ms('Experience Education',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);for(const l of d.expList){my=wt(doc,'• '+l,MX+4,my,W-MX-14,4.3)+1;}my+=2;}
   if(d.certList && d.certList.length){my=ms('Certifications',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);d.certList.forEach((c,ci)=>{my=wt(doc,(ci+1)+'. '+c,MX+4,my,W-MX-14,4.3)+1;});my+=2;}
   my=ms('INTERESTS and STRENGTHS',my);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);my=wt(doc,d.hobbies||'Listening Music, Browsing Internet, Self Motivation',MX+2,my,W-MX-12,4.3)+3;
   my=ms('Declaration',my);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
-  doc.text('I hereby declare that all information is true to the best of my knowledge.',MX+2,my,{maxWidth:W-MX-12});my+=7;
+  my=wt(doc,'I hereby declare that all the information, facts and details furnished above are true, complete and correct to the best of my knowledge and belief. In case any information is found to be false or incorrect at any stage, I shall be liable for appropriate action and my candidature or appointment is liable to be cancelled or terminated without prior notice.',MX+2,my,W-MX-12,4.2)+5;
   doc.text('Date: '+(d.decdate||'___________'),MX+2,my);doc.text('Place: '+(d.place||''),MX+45,my);doc.text('Sign: '+(d.sign||d.name),W-8,my,{align:'right'});
 }
 
