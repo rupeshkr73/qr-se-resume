@@ -88,7 +88,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
   <div class="login-card">
     <h2>Login</h2>
-    <div class="fg"><label class="fl">Username</label><input class="fi" id="l_user" placeholder="rupeshkr73"></div>
+    <div class="fg"><label class="fl">Username</label><input class="fi" id="l_user" placeholder="Admin username"></div>
     <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="l_pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn btn-p" onclick="doLogin()">🔑 Login</button>
     <a href="/" style="display:block;text-align:center;font-size:12px;color:var(--muted);text-decoration:none;margin-top:8px">← Home</a>
@@ -115,6 +115,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="main-grid">
     <!-- Left: Shops table -->
     <div>
+      <div class="panel" id="unlockPanel" style="display:none;border-color:#d29922">
+        <div class="panel-hdr">
+          <div class="panel-title">⚡ Advanced Feature Unlock Requests <span id="unlockCount" style="background:#d29922;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700"></span></div>
+        </div>
+        <div id="unlockList" style="padding:12px"></div>
+      </div>
+
       <div class="panel">
         <div class="panel-hdr">
           <div class="panel-title">🏪 Registered Shops</div>
@@ -122,7 +129,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Shop</th><th>ID</th><th>Phone</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Shop</th><th>ID</th><th>Payment</th><th>Status</th><th>⚡Adv</th><th>Registered</th><th>Action</th></tr></thead>
             <tbody id="shopsTbl"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr></tbody>
           </table>
         </div>
@@ -224,20 +231,25 @@ async function loadShops() {
     const shops = await fetch('/api/admin/shops', { headers: authH() }).then(r=>r.json());
     document.getElementById('shopCount').textContent = shops.length + ' shops';
     const modeMap = {both:'Online+Counter', counter:'Counter', online:'Online'};
-    document.getElementById('shopsTbl').innerHTML = shops.length ? shops.map(s=>`
+    const advMap = { approved:'<span class="badge-green">✅</span>', pending:'<span class="badge-yellow">⏳</span>', denied:'<span style="color:var(--red);font-size:11px">❌</span>' };
+    document.getElementById('shopsTbl').innerHTML = shops.length ? shops.map(s=>{
+      const dt = new Date(s.created_at);
+      const reg = dt.toLocaleDateString('en-IN') + '<br><span style="color:var(--muted)">' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) + '</span>';
+      return `
       <tr>
         <td><div style="font-weight:600;font-size:12px">${esc(s.name)}</div><div style="font-size:10px;color:var(--muted)">${esc(s.phone||'')}</div></td>
         <td style="font-family:monospace;font-size:11px;color:#58a6ff">${s.id}</td>
-        <td style="font-size:11px">${esc(s.phone||'—')}</td>
         <td style="font-size:11px">${modeMap[s.payment_mode]||s.payment_mode}</td>
         <td>${s.setup_paid ? '<span class="badge-green">Active</span>' : '<span class="badge-yellow">Pending</span>'}</td>
-        <td>
-          <button class="btn-sm ${s.active?'btn-sm-r':'btn-sm-p'}" onclick="toggleShop('${s.id}',${!s.active})">
-            ${s.active?'Disable':'Enable'}
-          </button>
+        <td>${advMap[s.advanced_status]||'<span style="color:var(--muted);font-size:11px">🔒</span>'}</td>
+        <td style="font-size:10px;line-height:1.5">${reg}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm ${s.active?'btn-sm-r':'btn-sm-p'}" onclick="toggleShop('${s.id}',${!s.active})">${s.active?'Disable':'Enable'}</button>
+          <button class="btn-sm btn-sm-r" style="margin-left:4px" onclick="deleteShop('${s.id}','${esc(s.name)}',${s.setup_paid})">🗑️</button>
         </td>
-      </tr>
-    `).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No shops yet</td></tr>';
+      </tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No shops yet</td></tr>';
+    loadUnlockRequests();
   } catch(e) { toast('❌ Shops: '+e.message); }
 }
 
@@ -312,6 +324,46 @@ async function saveVersion() {
   }
 }
 
+async function loadUnlockRequests(){
+  try{
+    const reqs = await fetch('/api/admin/unlock-requests',{headers:authH()}).then(r=>r.json());
+    const panel = document.getElementById('unlockPanel');
+    if(!Array.isArray(reqs) || !reqs.length){ panel.style.display='none'; return; }
+    panel.style.display='block';
+    document.getElementById('unlockCount').textContent = reqs.length;
+    document.getElementById('unlockList').innerHTML = reqs.map(r=>{
+      const dt = new Date(r.created_at).toLocaleDateString('en-IN');
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+        <div><div style="font-weight:700;font-size:13px">${esc(r.name)}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:monospace">${r.id} • ${esc(r.phone||'')} • reg: ${dt}</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm btn-sm-p" onclick="unlockDecision('${r.id}','approved')">✅ Accept</button>
+          <button class="btn-sm btn-sm-r" onclick="unlockDecision('${r.id}','denied')">❌ Deny</button>
+        </div></div>`;
+    }).join('');
+  }catch(e){}
+}
+async function unlockDecision(shopId, action){
+  try{
+    const r = await fetch('/api/admin/unlock-decision',{method:'POST',headers:authH(),body:JSON.stringify({shopId,action})});
+    const d = await r.json();
+    if(d.success){ toast(action==='approved'?'✅ Unlock approved!':'❌ Request denied'); loadShops(); }
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
+}
+async function deleteShop(shopId, name, paid){
+  const warn = paid
+    ? `⚠️ "${name}" (${shopId}) PAID shop hai!\nDelete karne par iske SAARE jobs/records ud jayenge. Pakka?`
+    : `"${name}" (${shopId}) pending shop delete karein?`;
+  if(!confirm(warn)) return;
+  if(paid && !confirm('Dobara confirm karo — PAID shop permanently delete hoga!')) return;
+  try{
+    const r = await fetch('/api/admin/shops/'+shopId,{method:'DELETE',headers:authH()});
+    const d = await r.json();
+    if(d.success){ toast('🗑️ Shop deleted'); loadShops(); loadStats(); }
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
+}
 async function toggleShop(shopId, active) {
   try {
     await fetch('/api/admin/toggle-shop', { method:'POST', headers: authH(), body: JSON.stringify({ shopId, active }) });

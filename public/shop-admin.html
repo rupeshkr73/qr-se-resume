@@ -126,11 +126,17 @@ textarea.fi{resize:vertical;min-height:60px}
       <img id="qrImg" class="qr-img" src="" alt="QR">
     </div>
     <a id="dlQR" class="dl-btn dl-qr" download>⬇️ QR Code Download Karo</a>
-    <a id="dlAgent" class="dl-btn dl-agent" download>⬇️ Print Agent Download Karo</a>
+    <a id="dlAgentExe" href="/downloads/QRSeResume_Agent.exe" download="QRSeResume_Agent.exe"
+       style="display:block;text-align:center;padding:16px;border-radius:12px;margin-bottom:10px;
+              background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;text-decoration:none;
+              font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;
+              box-shadow:0 4px 14px rgba(22,163,74,.35);transition:.2s"
+       onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      🖨️ Print Agent Software<br><span style="font-size:11px;font-weight:600;opacity:.85">⬇️ Download (.exe — Python ki zaroorat nahi)</span>
+    </a>
     <div style="background:#f8faff;border-radius:10px;padding:11px;margin-bottom:9px">
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:7px">📥 Must Install Software</div>
-      <a href="https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" class="dl-btn dl-py" target="_blank" style="margin-bottom:7px">🐍 Python 3.12 Download</a>
-      <a href="https://www.sumatrapdfreader.org/dl/rel/3.5.2/SumatraPDF-3.5.2-64-install.exe" class="dl-btn dl-sumatra" target="_blank" style="margin-bottom:0">📄 SumatraPDF Download</a>
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:7px">📥 Saath mein install karo</div>
+      <a href="https://www.sumatrapdfreader.org/dl/rel/3.5.2/SumatraPDF-3.5.2-64-install.exe" class="dl-btn dl-sumatra" target="_blank" style="margin-bottom:0">📄 SumatraPDF Download (printing ke liye zaroori)</a>
     </div>
     <a id="dlReadme" href="/downloads/README.txt" class="dl-btn dl-readme" download="README.txt">📋 README Instructions</a>
   </div>
@@ -167,8 +173,71 @@ textarea.fi{resize:vertical;min-height:60px}
     <div class="fg"><label class="fl">Razorpay Key Secret <span style="color:var(--muted);font-weight:400">(change karna ho to hi daalo)</span></label><input type="password" class="fi" id="e_rzp_sec" placeholder="Leave blank = no change"></div>
     <div class="fg"><label class="fl">PhonePe Merchant Key</label><input class="fi" id="e_pp_key" placeholder="PhonePe key (optional)"></div>
     <div style="height:4px"></div>
-    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px;margin-bottom:10px;font-size:11px;color:#92400e">🔒 Printer list aur settings Print Agent mein change hoti hain — EXE se manage hoti hai.</div>
     <button class="save-btn" onclick="saveSettings()">💾 Save All Changes</button>
+  </div>
+
+  <!-- ===== PRINTER SELECT ===== -->
+  <div class="card">
+    <h3>🖨️ Printer Select</h3>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+      PC ke installed printers ki list Print Agent bhejta hai. Jo select karoge,
+      <b>usi se print niklega</b> — Windows ka default printer koi bhi ho, farak nahi padta.
+    </div>
+    <div id="printerList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--muted)">⏳ Loading...</div>
+    </div>
+    <button class="save-btn" onclick="savePrinter()" style="background:linear-gradient(135deg,#0891b2,#06b6d4)">💾 Printer Save Karo</button>
+  </div>
+
+  <!-- ===== ADVANCED: BW/COLOR ROUTING ===== -->
+  <div class="card" id="advCard">
+    <h3>⚡ Advanced Feature <span id="advBadge" style="font-size:10px;padding:3px 10px;border-radius:10px;background:#fef3c7;color:#92400e;vertical-align:middle">🔒 Locked</span></h3>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+      B&W prints ke liye alag printer, Color ke liye alag — job ka color mode
+      dekh ke agent apne aap sahi printer choose karega.
+    </div>
+    <div id="advLocked">
+      <button class="save-btn" style="background:linear-gradient(135deg,#f59e0b,#f97316)" onclick="requestAdvanced()">🔓 Request Super Admin to Unlock</button>
+    </div>
+    <div id="advPending" style="display:none">
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px;font-size:12px;color:#92400e;text-align:center">
+        ⏳ Request Super Admin ko bhej di gayi hai — approval ka wait karo
+      </div>
+    </div>
+    <div id="advDenied" style="display:none">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:12px;color:#991b1b;text-align:center;margin-bottom:8px">
+        ❌ Super Admin ne request deny ki hai
+      </div>
+      <button class="save-btn" style="background:linear-gradient(135deg,#f59e0b,#f97316)" onclick="requestAdvanced()">🔓 Dobara Request Bhejo</button>
+    </div>
+    <div id="advApproved" style="display:none">
+      <div class="fg"><label class="fl">⚫ B&W Prints ka Printer</label><select class="fi" id="adv_bw"></select></div>
+      <div class="fg"><label class="fl">🌈 Color Prints ka Printer</label><select class="fi" id="adv_color"></select></div>
+      <button class="save-btn" onclick="saveAdvancedPrinters()" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">💾 BW/Color Printers Save Karo</button>
+    </div>
+  </div>
+
+  <!-- ===== PRINT LOG ===== -->
+  <div class="card">
+    <h3>📊 Print Log</h3>
+    <div class="stat-grid" style="margin-bottom:10px">
+      <div class="stat"><div class="stat-label">Total Prints</div><div class="stat-val" id="lg_total">—</div></div>
+      <div class="stat"><div class="stat-label">⚫ B&W</div><div class="stat-val" id="lg_bw">—</div></div>
+      <div class="stat"><div class="stat-label">🌈 Color</div><div class="stat-val" id="lg_color">—</div></div>
+      <div class="stat"><div class="stat-label">💰 Earning</div><div class="stat-val" id="lg_earn">—</div></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="text-align:left;color:var(--muted)">
+          <th style="padding:7px 6px;border-bottom:1px solid var(--border)">Customer</th>
+          <th style="padding:7px 6px;border-bottom:1px solid var(--border)">Mode</th>
+          <th style="padding:7px 6px;border-bottom:1px solid var(--border)">₹</th>
+          <th style="padding:7px 6px;border-bottom:1px solid var(--border)">Status</th>
+          <th style="padding:7px 6px;border-bottom:1px solid var(--border)">Date/Time</th>
+        </tr></thead>
+        <tbody id="logRows"><tr><td colspan="5" style="padding:14px;text-align:center;color:var(--muted)">Loading...</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Change Password -->
@@ -250,6 +319,9 @@ async function loadAll() {
     document.getElementById('totalE').textContent = '₹'+(s.total_earnings||0);
     // Instructions
     loadInstructions();
+    renderPrinterUI();
+    renderAdvancedUI();
+    loadPrintLogs();
   } catch(e) { toast('❌ '+e.message); }
 }
 
@@ -302,6 +374,118 @@ async function changePassword() {
     if (d.success) { toast('✅ Password changed!'); document.getElementById('e_pass').value=''; document.getElementById('e_pass2').value=''; }
     else toast('❌ '+d.error);
   } catch(e) { toast('❌ '+e.message); }
+}
+
+
+// ===== PRINTER SELECT =====
+let selPrinter = '';
+function installedList(){ try { return JSON.parse(shopData.installed_printers||'[]'); } catch(e){ return []; } }
+function renderPrinterUI(){
+  const wrap = document.getElementById('printerList');
+  const installed = installedList();
+  selPrinter = shopData.printer_selected || '';
+  let html = printerRow('', '🔍 Auto (system default)', selPrinter==='');
+  if(!installed.length){
+    html += `<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">
+      ⚠️ Abhi koi printer report nahi hua — shop PC par <b>Print Agent chalu karo</b>, list apne aap aa jayegi.</div>`;
+  } else {
+    installed.forEach(p => html += printerRow(p, '🖨️ ' + esc(p), selPrinter === p));
+  }
+  wrap.innerHTML = html;
+}
+function printerRow(val, label, sel){
+  return `<div onclick="pickPrinter(this)" data-p="${esc(val)}"
+    style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:9px;cursor:pointer;
+    border:1.5px solid ${sel?'var(--primary)':'var(--border)'};background:${sel?'#eff6ff':'#fff'};font-size:12px;font-weight:600">
+    <span>${label}</span><span style="color:var(--primary)">${sel?'✓':''}</span></div>`;
+}
+function pickPrinter(el){
+  selPrinter = el.dataset.p;
+  renderPrinterUIKeep();
+}
+function renderPrinterUIKeep(){
+  document.querySelectorAll('#printerList [data-p]').forEach(d=>{
+    const sel = d.dataset.p === selPrinter;
+    d.style.border = '1.5px solid ' + (sel?'var(--primary)':'var(--border)');
+    d.style.background = sel?'#eff6ff':'#fff';
+    d.lastElementChild.textContent = sel?'✓':'';
+  });
+}
+async function savePrinter(){
+  try{
+    const r = await fetch('/api/shop/printer',{method:'POST',headers:authH(),body:JSON.stringify({printer:selPrinter})});
+    const d = await r.json();
+    if(d.success){ shopData.printer_selected = selPrinter; toast('✅ Printer save! Agent 5 sec mein pick karega'); }
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
+}
+
+// ===== ADVANCED FEATURE =====
+function renderAdvancedUI(){
+  const st = shopData.advanced_status || 'locked';
+  const badge = document.getElementById('advBadge');
+  ['advLocked','advPending','advDenied','advApproved'].forEach(id=>document.getElementById(id).style.display='none');
+  if(st === 'approved'){
+    badge.textContent = '✅ Unlocked'; badge.style.background='#dcfce7'; badge.style.color='#166534';
+    document.getElementById('advApproved').style.display='block';
+    const installed = installedList();
+    const opts = ['<option value="">🔍 Auto (selected/default printer)</option>']
+      .concat(installed.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`)).join('');
+    const bw = document.getElementById('adv_bw'), col = document.getElementById('adv_color');
+    bw.innerHTML = opts; col.innerHTML = opts;
+    bw.value = shopData.printer_bw || ''; col.value = shopData.printer_color || '';
+  } else if(st === 'pending'){
+    badge.textContent = '⏳ Pending'; badge.style.background='#fef3c7'; badge.style.color='#92400e';
+    document.getElementById('advPending').style.display='block';
+  } else if(st === 'denied'){
+    badge.textContent = '❌ Denied'; badge.style.background='#fee2e2'; badge.style.color='#991b1b';
+    document.getElementById('advDenied').style.display='block';
+  } else {
+    badge.textContent = '🔒 Locked'; badge.style.background='#fef3c7'; badge.style.color='#92400e';
+    document.getElementById('advLocked').style.display='block';
+  }
+}
+async function requestAdvanced(){
+  try{
+    const r = await fetch('/api/shop/request-advanced',{method:'POST',headers:authH()});
+    const d = await r.json();
+    if(d.success){ shopData.advanced_status = d.status; renderAdvancedUI(); toast('📨 Request Super Admin ko bhej di!'); }
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
+}
+async function saveAdvancedPrinters(){
+  try{
+    const body = { printer_bw: document.getElementById('adv_bw').value, printer_color: document.getElementById('adv_color').value };
+    const r = await fetch('/api/shop/printer-advanced',{method:'POST',headers:authH(),body:JSON.stringify(body)});
+    const d = await r.json();
+    if(d.success){ shopData.printer_bw=body.printer_bw; shopData.printer_color=body.printer_color; toast('✅ BW/Color printers save!'); }
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
+}
+
+// ===== PRINT LOG =====
+async function loadPrintLogs(){
+  try{
+    const r = await fetch('/api/shop/print-logs',{headers:authH()});
+    const d = await r.json();
+    const sm = d.summary || {};
+    document.getElementById('lg_total').textContent = sm.total_printed||0;
+    document.getElementById('lg_bw').textContent    = sm.bw_printed||0;
+    document.getElementById('lg_color').textContent = sm.color_printed||0;
+    document.getElementById('lg_earn').textContent  = '₹'+(sm.earnings||0);
+    const rows = (d.logs||[]).map(j=>{
+      const dt = new Date(j.created_at);
+      const stColor = j.status==='printed'?'#16a34a':(j.status==='failed'?'#dc2626':'#d97706');
+      return `<tr>
+        <td style="padding:7px 6px;border-bottom:1px solid #f1f5f9">${esc(j.customer_name||'—')}</td>
+        <td style="padding:7px 6px;border-bottom:1px solid #f1f5f9">${j.color_mode==='color'?'🌈 Color':'⚫ B&W'}</td>
+        <td style="padding:7px 6px;border-bottom:1px solid #f1f5f9">₹${j.amount||0}</td>
+        <td style="padding:7px 6px;border-bottom:1px solid #f1f5f9;color:${stColor};font-weight:700">${esc(j.status)}</td>
+        <td style="padding:7px 6px;border-bottom:1px solid #f1f5f9;white-space:nowrap">${dt.toLocaleDateString('en-IN')} ${dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('logRows').innerHTML = rows || '<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--muted)">Abhi koi print nahi hua</td></tr>';
+  }catch(e){}
 }
 
 function copyId() {

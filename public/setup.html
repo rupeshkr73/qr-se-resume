@@ -197,7 +197,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;paddin
     </div>
     <div class="dl-btns">
       <a id="dlQR" class="dl-btn dl-btn-qr" download="shop-qr.png">⬇️ QR Code Download Karo</a>
-      <a id="dlAgent" class="dl-btn dl-btn-agent" href="/downloads/print_agent.py" download="print_agent.py">⬇️ Print Agent Download Karo</a>
+      <a id="dlAgent" href="/downloads/QRSeResume_Agent.exe" download="QRSeResume_Agent.exe"
+   style="display:block;text-align:center;padding:15px;border-radius:12px;margin-bottom:8px;
+          background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;text-decoration:none;
+          font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;
+          box-shadow:0 4px 14px rgba(22,163,74,.35)">
+  🖨️ Print Agent Software<br><span style="font-size:11px;font-weight:600;opacity:.85">⬇️ Download (.exe — Python ki zaroorat nahi)</span>
+</a>
       <a id="dlReadme" class="dl-btn dl-btn-readme" href="/downloads/README.txt" download="README.txt">📄 README Instructions</a>
     </div>
     <div class="login-redirect">
@@ -287,29 +293,33 @@ function goStep3() {
 async function paySetup() {
   showLoad('Shop register ho raha hai...');
   try {
-    // Step 1: Register shop
-    const regResp = await fetch('/api/shop/register', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        name:         gv('s_name'),
-        address:      gv('s_addr'),
-        phone:        gv('s_phone'),
-        email:        gv('s_email'),
-        price_bw:     parseInt(gv('s_bw'))||10,
-        price_color:  parseInt(gv('s_color'))||20,
-        payment_mode: document.getElementById('s_paymode').value,
-        rzp_key_id:   gv('s_rzp_id'),
-        rzp_key_secret: document.getElementById('s_rzp_secret')?.value||'',
-        phonepay_key: gv('s_pp_key'),
-        password:     gv('s_pass')
-      })
-    });
-    const regData = await regResp.json();
-    if (!regData.success) throw new Error(regData.error||'Registration failed');
-    registeredShopId = regData.shopId;
+    // FIX: pehle har click par NAYA shop register hota tha — payment fail
+    // ya modal cancel karke retry karo to duplicate "pending" shops bante
+    // the. Ab ek baar registered ho gaya to wahi shopId reuse hota hai.
+    if (!registeredShopId) {
+      const regResp = await fetch('/api/shop/register', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name:         gv('s_name'),
+          address:      gv('s_addr'),
+          phone:        gv('s_phone'),
+          email:        gv('s_email'),
+          price_bw:     parseInt(gv('s_bw'))||10,
+          price_color:  parseInt(gv('s_color'))||20,
+          payment_mode: document.getElementById('s_paymode').value,
+          rzp_key_id:   gv('s_rzp_id'),
+          rzp_key_secret: document.getElementById('s_rzp_secret')?.value||'',
+          phonepay_key: gv('s_pp_key'),
+          password:     gv('s_pass')
+        })
+      });
+      const regData = await regResp.json();
+      if (!regData.success) throw new Error(regData.error||'Registration failed');
+      registeredShopId = regData.shopId;
+    }
 
-    // Step 2: Create payment order
+    showLoad('Payment order ban raha hai...');
     const orderResp = await fetch('/api/shop/setup-payment/create', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -319,7 +329,6 @@ async function paySetup() {
     if (!orderData.orderId) throw new Error(orderData.error||'Payment order failed');
     hideLoad();
 
-    // Step 3: Open Razorpay
     const rzp = new Razorpay({
       key:         orderData.keyId,
       amount:      orderData.amount,
@@ -329,15 +338,33 @@ async function paySetup() {
       order_id:    orderData.orderId,
       handler: async function(resp) {
         showLoad('Payment verify ho raha hai...');
-        const vResp = await fetch('/api/shop/setup-payment/verify', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({...resp, shopId: registeredShopId})
-        });
-        const vData = await vResp.json();
+        // FIX: paisa katne ke baad verify network par fail ho jaye to user
+        // hamesha ke liye lock ho jata tha. Ab 3 retries + fail par bhi
+        // Shop ID ke saath clear message (paisa gaya, support path hai).
+        let vData = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const vResp = await fetch('/api/shop/setup-payment/verify', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({...resp, shopId: registeredShopId})
+            });
+            vData = await vResp.json();
+            if (vData.success) break;
+          } catch(e) { /* network — retry */ }
+          await new Promise(r=>setTimeout(r, 3000));
+        }
         hideLoad();
-        if (vData.success) showSuccess(vData);
-        else toast('❌ Payment verify nahi hua');
+        if (vData && vData.success) showSuccess(vData);
+        else {
+          toast('⚠️ Payment ho gayi par verify atka hai');
+          alert('Payment ho chuki hai! Apna Shop ID note karo: ' + registeredShopId +
+                '\n\nKuch minute baad Shop Login try karo — activate na ho to isi Shop ID ke saath support se contact karo. Dobara payment MAT karo.');
+        }
+      },
+      modal: {
+        // FIX: user modal cancel kare to pata hi nahi chalta tha
+        ondismiss: function(){ hideLoad(); toast('Payment cancel — dobara "Pay" dabao, shop dobara register NAHI hoga'); }
       },
       prefill: { contact: gv('s_phone'), email: gv('s_email') },
       theme: { color: '#2563eb' }
@@ -358,7 +385,7 @@ function showSuccess(data) {
   dlQR.download = `QR_${data.shopId}.png`;
 
   // Agent already has shopId — generate dynamic download
-  document.getElementById('dlAgent').href = `/downloads/print_agent.py?shopId=${data.shopId}`;
+  // EXE download link static hai — Shop ID agent apne first-run setup mein poochta hai
 
   window.scrollTo(0,0);
   toast('🎉 Setup complete! Shop ID: '+data.shopId);
