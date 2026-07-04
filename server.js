@@ -14,11 +14,23 @@ const jwt      = require('jsonwebtoken');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 const BASE_URL   = process.env.BASE_URL   || 'https://qr-se-resume.onrender.com';
-const JWT_SECRET = process.env.JWT_SECRET || 'qrresume_secret_2026';
+// SECURITY: hardcoded secret source/GitHub par public tha — koi bhi apna
+// superadmin token sign kar sakta tha. Env nahi mila to random per-boot.
+const crypto2 = require('crypto');
+const JWT_SECRET = process.env.JWT_SECRET || crypto2.randomBytes(32).toString('hex');
+if (!process.env.JWT_SECRET) console.log('⚠️  JWT_SECRET env set karo — abhi har restart par logins invalid honge');
+const ADMIN_USER = process.env.SUPER_ADMIN_ID;
+const ADMIN_PASS = process.env.SUPER_ADMIN_PASS;
+if (!ADMIN_USER || !ADMIN_PASS) console.log('⚠️  SUPER_ADMIN_ID / SUPER_ADMIN_PASS env set nahi — admin login DISABLED');
 
 // Razorpay — SUPER ADMIN (Rupesh) ke liye setup fee collection
-const ADMIN_RZP_KEY_ID  = process.env.ADMIN_RAZORPAY_KEY_ID     || 'rzp_live_T2bp3UTHAKTfOV';
-const ADMIN_RZP_SECRET  = process.env.ADMIN_RAZORPAY_KEY_SECRET || 'Fw64wrlkbOIWq5FqJfnVYApz';
+// SECURITY: pehle LIVE Razorpay key+secret yahin hardcoded the — source
+// dekhne wala koi bhi account par API calls kar sakta tha. Env-only ab.
+// (Purani key Razorpay dashboard se REGENERATE karna zaroori hai — git
+// history mein leak ho chuki hai.)
+const ADMIN_RZP_KEY_ID  = process.env.ADMIN_RAZORPAY_KEY_ID  || '';
+const ADMIN_RZP_SECRET  = process.env.ADMIN_RAZORPAY_KEY_SECRET || '';
+if (!ADMIN_RZP_KEY_ID || !ADMIN_RZP_SECRET) console.log('⚠️  ADMIN_RAZORPAY_KEY_ID/SECRET env set nahi — setup fee payment DISABLED');
 
 // App version — agents check this for auto-update
 const APP_VERSION = process.env.APP_VERSION || '2.1.0';
@@ -102,6 +114,12 @@ async function initDB() {
       ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS phonepay_key TEXT;
       ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS setup_paid BOOLEAN DEFAULT FALSE;
       ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;
+      ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS installed_printers TEXT DEFAULT '[]';
+      ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS printer_selected TEXT DEFAULT '';
+      ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS printer_bw TEXT DEFAULT '';
+      ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS printer_color TEXT DEFAULT '';
+      ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS advanced_status VARCHAR(20) DEFAULT 'locked';
+      ALTER TABLE resume_shops ADD COLUMN IF NOT EXISTS printers_updated_at TIMESTAMP;
     `);
     console.log('✅ DB ready');
   } catch(err) { console.error('❌ DB:', err.message); }
@@ -147,8 +165,9 @@ async function razorpayOrder(amountPaise, receipt, keyId, secret) {
 // SUPER ADMIN AUTH
 // ══════════════════════════════════════════════════════════════════════════════
 app.post('/api/admin/login', (req, res) => {
+  if (!ADMIN_USER || !ADMIN_PASS) return res.status(503).json({ error: 'Admin login configured nahi — server env mein SUPER_ADMIN_ID/SUPER_ADMIN_PASS set karo' });
   const { username, password } = req.body;
-  if (username === 'rupeshkr73' && password === 'Rupesh@2608') {
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
     const token = jwt.sign({ role:'superadmin', username }, JWT_SECRET, { expiresIn:'24h' });
     res.json({ success:true, token });
   } else {
@@ -170,7 +189,7 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
 
 app.get('/api/admin/shops', authAdmin, async (req, res) => {
   try {
-    const r = await pool.query('SELECT id,name,address,phone,email,price_bw,price_color,payment_mode,setup_paid,active,created_at FROM resume_shops ORDER BY created_at DESC');
+    const r = await pool.query('SELECT id,name,address,phone,email,price_bw,price_color,payment_mode,setup_paid,active,created_at,advanced_status FROM resume_shops ORDER BY created_at DESC');
     res.json(r.rows);
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
@@ -209,7 +228,7 @@ app.post('/api/shop/login', async (req, res) => {
 
 app.get('/api/shop/me', authShop, async (req, res) => {
   try {
-    const r = await pool.query('SELECT id,name,address,phone,email,price_bw,price_color,payment_mode,rzp_key_id,phonepay_key,qr_code,setup_paid,active FROM resume_shops WHERE id=$1', [req.shop.shopId]);
+    const r = await pool.query('SELECT id,name,address,phone,email,price_bw,price_color,payment_mode,rzp_key_id,phonepay_key,qr_code,setup_paid,active,installed_printers,printer_selected,printer_bw,printer_color,advanced_status,created_at FROM resume_shops WHERE id=$1', [req.shop.shopId]);
     if (!r.rows.length) return res.status(404).json({ error: 'Shop not found' });
     res.json(r.rows[0]);
   } catch(err) { res.status(500).json({ error: err.message }); }
@@ -391,7 +410,124 @@ app.get('/api/jobs/pending/:shopId', async (req, res) => {
       `SELECT id,customer_name,color_mode,amount FROM resume_jobs WHERE shop_id=$1 AND status='queued' AND payment_status='paid' ORDER BY created_at ASC LIMIT 5`,
       [req.params.shopId]
     );
-    res.json({ jobs: r.rows });
+    // Shop ki printer settings har poll mein — dashboard mein change hote
+    // hi agent ko agle poll (5 sec) mein mil jati hai
+    const sh = await pool.query(
+      'SELECT printer_selected,printer_bw,printer_color,advanced_status FROM resume_shops WHERE id=$1',
+      [req.params.shopId]
+    );
+    const sp = sh.rows[0] || {};
+    res.json({ jobs: r.rows, settings: {
+      printer: sp.printer_selected || '',
+      printer_bw: sp.printer_bw || '',
+      printer_color: sp.printer_color || '',
+      advanced: sp.advanced_status === 'approved'
+    }});
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Agent: installed printers report (dashboard dropdown ke liye) ──
+app.post('/api/agent/printers/:shopId', async (req, res) => {
+  try {
+    let { printers } = req.body;
+    if (!Array.isArray(printers)) return res.status(400).json({ error: 'printers array chahiye' });
+    printers = printers.filter(p => typeof p === 'string').slice(0, 20);
+    const r = await pool.query(
+      'UPDATE resume_shops SET installed_printers=$1, printers_updated_at=NOW() WHERE id=$2 RETURNING id',
+      [JSON.stringify(printers), req.params.shopId]
+    );
+    if (!r.rows.length) return res.status(404).json({ error: 'Shop not found' });
+    res.json({ success: true });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Shop: printer select (normal — ek printer sab ke liye) ──
+app.post('/api/shop/printer', authShop, async (req, res) => {
+  try {
+    const { printer } = req.body;
+    const sh = await pool.query('SELECT installed_printers FROM resume_shops WHERE id=$1', [req.shop.shopId]);
+    const installed = JSON.parse(sh.rows[0]?.installed_printers || '[]');
+    // Sirf agent ki report ki hui list mein se ('' = auto/default)
+    if (printer && installed.length && !installed.includes(printer))
+      return res.status(400).json({ error: 'Yeh printer installed list mein nahi — Print Agent chal raha hai?' });
+    await pool.query('UPDATE resume_shops SET printer_selected=$1 WHERE id=$2', [printer || '', req.shop.shopId]);
+    res.json({ success: true });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Shop: advanced BW/Color printers (sirf approved shops) ──
+app.post('/api/shop/printer-advanced', authShop, async (req, res) => {
+  try {
+    const { printer_bw, printer_color } = req.body;
+    const sh = await pool.query('SELECT installed_printers,advanced_status FROM resume_shops WHERE id=$1', [req.shop.shopId]);
+    if (!sh.rows.length) return res.status(404).json({ error: 'Shop not found' });
+    if (sh.rows[0].advanced_status !== 'approved')
+      return res.status(403).json({ error: 'Advanced feature abhi unlock nahi hua — Super Admin approval chahiye' });
+    const installed = JSON.parse(sh.rows[0].installed_printers || '[]');
+    for (const p of [printer_bw, printer_color]) {
+      if (p && installed.length && !installed.includes(p))
+        return res.status(400).json({ error: `"${p}" installed list mein nahi hai` });
+    }
+    await pool.query('UPDATE resume_shops SET printer_bw=$1, printer_color=$2 WHERE id=$3',
+      [printer_bw || '', printer_color || '', req.shop.shopId]);
+    res.json({ success: true });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Shop: advanced unlock request ──
+app.post('/api/shop/request-advanced', authShop, async (req, res) => {
+  try {
+    const sh = await pool.query('SELECT advanced_status FROM resume_shops WHERE id=$1', [req.shop.shopId]);
+    const st = sh.rows[0]?.advanced_status || 'locked';
+    if (st === 'approved') return res.json({ success: true, status: 'approved' });
+    if (st === 'pending')  return res.json({ success: true, status: 'pending' });
+    await pool.query("UPDATE resume_shops SET advanced_status='pending' WHERE id=$1", [req.shop.shopId]);
+    res.json({ success: true, status: 'pending' });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Shop: print logs (color/BW, earning) ──
+app.get('/api/shop/print-logs', authShop, async (req, res) => {
+  try {
+    const logs = await pool.query(
+      `SELECT id,customer_name,color_mode,amount,status,payment_status,created_at,printed_at
+       FROM resume_jobs WHERE shop_id=$1 ORDER BY created_at DESC LIMIT 100`,
+      [req.shop.shopId]);
+    const sum = await pool.query(
+      `SELECT COUNT(CASE WHEN status='printed' THEN 1 END) as total_printed,
+              COUNT(CASE WHEN status='printed' AND color_mode='bw' THEN 1 END) as bw_printed,
+              COUNT(CASE WHEN status='printed' AND color_mode='color' THEN 1 END) as color_printed,
+              COALESCE(SUM(CASE WHEN status='printed' AND payment_status='paid' THEN amount ELSE 0 END),0) as earnings
+       FROM resume_jobs WHERE shop_id=$1`, [req.shop.shopId]);
+    res.json({ logs: logs.rows, summary: sum.rows[0] });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Admin: unlock requests + decision ──
+app.get('/api/admin/unlock-requests', authAdmin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT id,name,phone,created_at FROM resume_shops WHERE advanced_status='pending' ORDER BY created_at DESC");
+    res.json(r.rows);
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/admin/unlock-decision', authAdmin, async (req, res) => {
+  try {
+    const { shopId, action } = req.body; // 'approved' | 'denied'
+    if (!['approved','denied'].includes(action)) return res.status(400).json({ error: 'Invalid action' });
+    await pool.query('UPDATE resume_shops SET advanced_status=$1 WHERE id=$2', [action, shopId]);
+    res.json({ success: true });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Admin: shop delete (pending/junk registrations hatane ke liye) ──
+app.delete('/api/admin/shops/:shopId', authAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM resume_jobs WHERE shop_id=$1', [req.params.shopId]);
+    await pool.query('DELETE FROM setup_orders WHERE shop_id=$1', [req.params.shopId]);
+    await pool.query('DELETE FROM resume_shops WHERE id=$1', [req.params.shopId]);
+    res.json({ success: true });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -643,7 +779,6 @@ app.get('/downloads/INSTALL.bat', (req, res) => {
 
 // ── Pages ─────────────────────────────────────────────────────────────────────
 app.get('/',               (_,res) => res.sendFile(path.join(__dirname,'public','index.html')));
-app.get('/dashboard',      (_,res) => res.sendFile(path.join(__dirname,'public','dashboard.html')));
 app.get('/setup',          (_,res) => res.sendFile(path.join(__dirname,'public','setup.html')));
 app.get('/shop-admin',     (_,res) => res.sendFile(path.join(__dirname,'public','shop-admin.html')));
 app.get('/super-admin',    (_,res) => res.sendFile(path.join(__dirname,'public','super-admin.html')));
