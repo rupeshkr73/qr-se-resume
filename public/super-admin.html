@@ -123,7 +123,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           <div style="font-size:12px;color:var(--muted)">Current live: <b style="color:#58a6ff;font-size:15px" id="agentVerDisplay">—</b></div>
           <input id="agentVerInput" placeholder="2.5.0" style="width:110px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit;font-family:monospace">
           <button class="btn-sm btn-sm-p" onclick="pushAgentVersion()">🚀 Push Version</button>
-          <div style="flex-basis:100%;font-size:10px;color:var(--muted)">⚠️ Pehle naya exe <code>public/downloads/</code> mein deploy karo, USKE BAAD version push — ulta kiya to agents aisa exe download karenge jo exist nahi karta</div>
+          <div style="flex-basis:100%;display:flex;gap:8px;align-items:center;margin-top:6px">
+            <input id="agentExeUrlInput" placeholder="https://github.com/rupeshkr73/.../releases/download/v2.5.0/QRSeResume_Agent.exe"
+                   style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit;font-size:11px;font-family:monospace">
+            <button class="btn-sm btn-sm-p" onclick="saveExeUrl()" style="white-space:nowrap">💾 Link Save</button>
+          </div>
+          <div style="flex-basis:100%;font-size:10px;color:var(--muted)">📦 GitHub Release ka exe link yahan — shop owner ka download button + saare agents ka update isi se chalega. ⚠️ Pehle LINK save karo (naye exe ka), USKE BAAD version push — ulta kiya to agents purana/ghost exe download karenge</div>
         </div>
       </div>
 
@@ -342,7 +347,18 @@ async function loadAgentVersion(){
     const d = await fetch('/api/agent/version').then(r=>r.json());
     document.getElementById('agentVerDisplay').textContent = 'v' + d.version;
     document.getElementById('agentVerInput').placeholder = d.version;
+    if(d.exeUrl) document.getElementById('agentExeUrlInput').value = d.exeUrl;
   }catch(e){}
+}
+async function saveExeUrl(){
+  const url = document.getElementById('agentExeUrlInput').value.trim();
+  if(url && !/^https:\/\//.test(url)) return toast('❌ Link https:// se shuru hona chahiye');
+  try{
+    const r = await fetch('/api/admin/agent-exe-url',{method:'POST',headers:authH(),body:JSON.stringify({url})});
+    const d = await r.json();
+    if(d.success) toast(url ? '💾 Download link save — buttons + agents ab isi se download karenge' : '💾 Link hataya — local file fallback');
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
 }
 async function pushAgentVersion(){
   const v = document.getElementById('agentVerInput').value.trim();
