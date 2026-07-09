@@ -144,6 +144,55 @@ input:focus,select:focus,textarea:focus{border-color:#7c3aed !important;outline:
   font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#7c3aed}
 </style>
 
+<style id="pnp-scroll-bg">
+/* ═══ Scroll ke saath moving gradient background (PnP-style) ═══
+   Body pe fixed gradient jo scroll par shift hota hai — subtle, content
+   readable rehe isliye light. */
+body{
+  background:linear-gradient(135deg,#faf5ff 0%,#f3ecff 20%,#eef3ff 45%,#fdf0f8 70%,#f6f0ff 100%) !important;
+  background-size:200% 200% !important;
+  background-attachment:fixed !important;
+  animation:pnpShift 18s ease infinite !important;
+}
+@keyframes pnpShift{
+  0%{background-position:0% 0%}
+  50%{background-position:100% 100%}
+  100%{background-position:0% 0%}
+}
+@media (prefers-reduced-motion:reduce){
+  body{animation:none !important}
+}
+/* Floating gradient blobs — scroll par parallax feel */
+body::before,body::after{
+  content:'';position:fixed;border-radius:50%;filter:blur(70px);opacity:.25;z-index:0;pointer-events:none;
+}
+body::before{width:300px;height:300px;background:radial-gradient(circle,#7c3aed,transparent 70%);top:-60px;left:-80px}
+body::after{width:340px;height:340px;background:radial-gradient(circle,#e0489f,transparent 70%);bottom:-80px;right:-90px}
+/* content blobs ke upar rahe */
+nav,.topbar,.hdr,.wrap,.card,.panel,.login-card,.stat,.container,.main,section{position:relative;z-index:1}
+</style>
+
+<style id="pnp-superadmin-light">
+/* ═══ Superadmin dark theme -> PnP light (login + panel dono) ═══ */
+:root{
+  --bg:#ffffff !important;--card:#ffffff !important;--border:#ece7f5 !important;
+  --text:#1a1030 !important;--muted:#7a6b99 !important;--primary:#7c3aed !important;
+}
+.topbar{background:#fff !important;border-bottom:1.5px dashed #ece7f5 !important}
+.topbar *{color:#1a1030 !important}
+.topbar .brand,.topbar h1{color:#7c3aed !important;font-family:'Poppins',sans-serif !important}
+.panel,.card{background:#fff !important;border:1.5px solid #ece7f5 !important;
+  box-shadow:0 10px 30px rgba(124,58,237,.08) !important}
+.panel-hdr,.panel-title{color:#1a1030 !important}
+.fi,.inst-item,.inst-input,input,textarea,select{
+  background:#fff !important;border:1.5px solid #ece7f5 !important;color:#1a1030 !important}
+.fi:focus,input:focus{border-color:#7c3aed !important}
+.toast{background:#1a1030 !important;color:#fff !important;border:none !important}
+table th,table td{color:#1a1030 !important;border-color:#ece7f5 !important}
+.stat,.stat-box{background:#fff !important;border:1.5px solid #ece7f5 !important}
+code{background:#f3ecff !important;color:#7c3aed !important}
+</style>
+
 </head>
 <body>
 
