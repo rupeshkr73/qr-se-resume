@@ -13,7 +13,7 @@ from pathlib import Path
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SERVER_URL     = "https://qr-se-resume.onrender.com"
-VERSION        = "2.4.0"
+VERSION        = "2.5.0"
 CHECK_INTERVAL = 5
 APP_NAME       = "QRSeResume"
 
@@ -28,6 +28,32 @@ try: os.makedirs(CONFIG_DIR, exist_ok=True)
 except Exception: CONFIG_DIR = _EXE_DIR
 CONFIG_FILE = os.path.join(CONFIG_DIR, "agent_config.json")
 LOG_FILE    = os.path.join(CONFIG_DIR, "agent_log.txt")
+
+# ══════════════════════════════════════════════════════════════════
+# TLS CA BUNDLE PIN — PyInstaller --onefile ka _MEIxxxxx temp folder
+# Windows temp-cleaners chalte agent ke neeche se uda dete hain; uske
+# baad har HTTPS request "TLS CA certificate bundle invalid path" se
+# fail hoti hai (QR Se Print par yahi hua tha). cacert.pem ko APPDATA
+# mein pin karke env se point karo — _MEI ude to bhi HTTPS zinda.
+# ══════════════════════════════════════════════════════════════════
+def _pin_ca_bundle():
+    try:
+        import shutil as _sh, certifi
+        src = certifi.where()
+        dst = os.path.join(CONFIG_DIR, "cacert.pem")
+        try:
+            if (not os.path.exists(dst)
+                    or os.path.getsize(dst) != os.path.getsize(src)):
+                _sh.copy2(src, dst)
+        except Exception:
+            pass
+        if os.path.exists(dst) and os.path.getsize(dst) > 10000:
+            os.environ["REQUESTS_CA_BUNDLE"] = dst
+            os.environ["SSL_CERT_FILE"] = dst
+    except Exception:
+        pass
+
+_pin_ca_bundle()
 _OLD_CONFIG = os.path.join(_EXE_DIR, "agent_config.json")  # purani location (migration)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -264,46 +290,65 @@ def _ver_tuple(v):
     try: return tuple(int(x) for x in str(v).strip().split("."))
     except: return (0,)
 
+def download_new_exe(progress_cb=None):
+    """Naya exe download karo. Return: (tmp_path, None) ya (None, error_msg)."""
+    new_exe_url = f"{SERVER_URL}/downloads/QRSeResume_Agent.exe"
+    resp = requests.get(new_exe_url, timeout=120, stream=True)
+    if resp.status_code == 404:
+        return None, "Server par naya exe upload nahi hua hai (public/downloads check karo)"
+    if resp.status_code != 200:
+        return None, f"Download fail (HTTP {resp.status_code})"
+    total = int(resp.headers.get('content-length') or 0)
+    cur = sys.executable
+    tmp = cur + ".new"
+    done = 0
+    with open(tmp, 'wb') as f:
+        for chunk in resp.iter_content(65536):
+            if chunk:
+                f.write(chunk)
+                done += len(chunk)
+                if progress_cb:
+                    pct = int(done * 100 / total) if total else None
+                    progress_cb(pct, done / 1048576)
+    if done < 500_000:  # exe kam se kam ~MB ka hota hai — chhota = error page
+        return None, "Download hui file exe nahi lagti (bahut chhoti) — downloads folder check karo"
+    return tmp, None
+
+def apply_downloaded_exe(tmp):
+    """bat retry-move se running exe replace karo aur poora process band."""
+    cur = sys.executable
+    bat = os.path.join(tempfile.gettempdir(), "qrresume_update.bat")
+    # move retry loop — running exe overwrite nahi hota jab tak process
+    # zinda hai, isliye tab tak retry
+    with open(bat, 'w') as f:
+        f.write('@echo off\nset /a tries=0\n:loop\n'
+                'timeout /t 2 /nobreak >nul\n'
+                f'move /y "{tmp}" "{cur}" >nul 2>&1\n'
+                'if not errorlevel 1 goto ok\n'
+                'set /a tries+=1\nif %tries% lss 15 goto loop\n'
+                'goto end\n:ok\n'
+                f'start "" "{cur}"\n:end\ndel "%~f0"\n')
+    log("✅ Update downloaded, restarting...")
+    subprocess.Popen(['cmd','/c',bat], creationflags=subprocess.CREATE_NO_WINDOW)
+    # sys.exit() sirf thread marta — os._exit poora process (file unlock)
+    os._exit(0)
+
 def check_update(shop_id):
+    """Auto path (hourly/startup) — silent."""
     try:
         r = requests.get(f"{SERVER_URL}/api/agent/version", timeout=8)
         if r.status_code != 200: return
-        d = r.json()
-        sv = d.get("version", VERSION)
-        # SIRF newer version pe update — pehle `sv != VERSION` tha, jisse
-        # naya exe deploy karne par (server version endpoint update karna
-        # bhool jao to) agent khud ko purane version se replace karke
-        # infinite update-restart loop me phans jata tha
+        sv = r.json().get("version", VERSION)
+        # SIRF newer par update — warna server-version bhoolne par infinite
+        # downgrade-restart loop
         if _ver_tuple(sv) <= _ver_tuple(VERSION): return
         log(f"🔄 Update: {VERSION} → {sv}")
         if getattr(sys, 'frozen', False):
-            new_exe_url = f"{SERVER_URL}/downloads/QRSeResume_Agent.exe"
-            resp = requests.get(new_exe_url, timeout=120, stream=True)
-            if resp.status_code == 200:
-                cur = sys.executable
-                tmp = cur + ".new"
-                with open(tmp, 'wb') as f:
-                    for chunk in resp.iter_content(65536):
-                        if chunk: f.write(chunk)
-                bat = os.path.join(tempfile.gettempdir(), "qrresume_update.bat")
-                # move retry loop — running exe overwrite nahi hota jab tak
-                # process zinda hai, isliye tab tak retry karo
-                with open(bat, 'w') as f:
-                    f.write('@echo off\nset /a tries=0\n:loop\n'
-                            'timeout /t 2 /nobreak >nul\n'
-                            f'move /y "{tmp}" "{cur}" >nul 2>&1\n'
-                            'if not errorlevel 1 goto ok\n'
-                            'set /a tries+=1\nif %tries% lss 15 goto loop\n'
-                            'goto end\n:ok\n'
-                            f'start "" "{cur}"\n:end\ndel "%~f0"\n')
-                log("✅ Update downloaded, restarting...")
-                subprocess.Popen(['cmd','/c',bat],
-                    creationflags=subprocess.CREATE_NO_WINDOW)
-                # sys.exit() yahan SIRF is daemon thread ko marta tha —
-                # tray/process zinda rehta, exe file locked rehti, move
-                # fail hota aur update kabhi apply nahi hota. os._exit
-                # poora process turant band karta hai.
-                os._exit(0)
+            tmp, err = download_new_exe()
+            if err:
+                log(f"❌ {err}", "ERROR")
+                return
+            apply_downloaded_exe(tmp)
         else:
             resp = requests.get(
                 f"{SERVER_URL}/downloads/print_agent.py?shopId={shop_id}",
@@ -401,6 +446,77 @@ def mark_fail(job_id, reason=""):
                        json={"reason": reason}, timeout=10)
     except: pass
 
+
+# ─── MANUAL UPDATE CHECK (tray se) — errors DIKHATA hai, chupata nahi ───
+def manual_update_check(icon=None, item=None):
+    threading.Thread(target=_manual_update_ui, daemon=True).start()
+
+def _manual_update_ui():
+    try:
+        import tkinter as tk
+        from tkinter import ttk
+        root = tk.Tk()
+        root.title("QR Se Resume — Update Check")
+        root.attributes('-topmost', True)
+        root.resizable(False, False)
+        root.geometry("380x190")
+        frame = tk.Frame(root, bg='white'); frame.pack(fill='both', expand=True)
+        title = tk.Label(frame, text="🔍 Update check ho raha hai...",
+                         font=('Segoe UI', 12, 'bold'), bg='white'); title.pack(pady=(22, 4))
+        sub = tk.Label(frame, text=f"Abhi installed: v{VERSION}",
+                       font=('Segoe UI', 10), bg='white', fg='#666'); sub.pack()
+        bar = ttk.Progressbar(frame, length=300, mode='determinate')
+        pct_lbl = tk.Label(frame, text="", font=('Segoe UI', 10, 'bold'), bg='white')
+        close_btn = tk.Button(frame, text="Band Karo", font=('Segoe UI', 10), command=root.destroy)
+        root.update()
+
+        try:
+            r = requests.get(f"{SERVER_URL}/api/agent/version", timeout=15)
+            sv = r.json().get("version") if r.status_code == 200 else None
+        except Exception:
+            sv = None
+        if sv is None:
+            title.config(text="⚠️ Server se version nahi mila")
+            sub.config(text="Internet ya server check karo")
+            close_btn.pack(pady=14); root.mainloop(); return
+        if _ver_tuple(sv) <= _ver_tuple(VERSION):
+            title.config(text="✅ Aapke paas latest version hai")
+            sub.config(text=f"Installed v{VERSION}  =  Server v{sv}")
+            close_btn.pack(pady=14); root.mainloop(); return
+        if not getattr(sys, 'frozen', False):
+            title.config(text=f"🔄 Naya version: v{sv}")
+            sub.config(text="Source (.py) mode — auto-update agla check apply karega")
+            close_btn.pack(pady=14); root.mainloop(); return
+
+        title.config(text=f"🔄 Naya version mila: v{VERSION} → v{sv}")
+        sub.config(text="Download ho raha hai...")
+        bar.pack(pady=(14, 4)); pct_lbl.pack(); root.update()
+
+        def on_progress(pct, mb):
+            if pct is not None:
+                bar['value'] = pct; pct_lbl.config(text=f"{pct}%  ({mb:.1f} MB)")
+            else:
+                bar.config(mode='indeterminate'); pct_lbl.config(text=f"{mb:.1f} MB downloaded...")
+            root.update()
+
+        try:
+            tmp, err = download_new_exe(on_progress)
+        except Exception as e:
+            tmp, err = None, str(e)
+        if err:
+            title.config(text="❌ Update download fail")
+            sub.config(text=err[:60])
+            log(f"❌ Manual update: {err}", "ERROR")
+            close_btn.pack(pady=10); root.mainloop(); return
+
+        bar['value'] = 100; pct_lbl.config(text="100%")
+        title.config(text=f"✅ v{sv} install ho raha hai...")
+        sub.config(text="Agent khud restart hoga — tray mein naya version dikhega")
+        root.update(); time.sleep(1.5); root.destroy()
+        apply_downloaded_exe(tmp)
+    except Exception as e:
+        log(f"❌ Manual update UI error: {e}", "ERROR")
+
 # ── Tray Icon ─────────────────────────────────────────────────────────────────
 tray_ref = [None]
 
@@ -459,7 +575,9 @@ def run_tray(shop_id, shop_name, printer):
             pystray.MenuItem(f"Shop: {shop_name or shop_id}", None, enabled=False),
             pystray.MenuItem(f"Printer: {printer or 'Default'}", None, enabled=False),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem(f"Version: v{VERSION}", None, enabled=False),
             pystray.MenuItem("📋 View Log",   open_log),
+            pystray.MenuItem("⬆️ Check for Update", manual_update_check),
             pystray.MenuItem("🔄 Change Shop ID", change_shop),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("❌ Exit",        quit_app),
