@@ -101,6 +101,7 @@ async function initDB() {
       );
 
       INSERT INTO app_settings(key,value) VALUES
+        ('agent_version','2.5.0'),
         ('setup_price','499'),('setup_offer_price','499'),
         ('app_version','2.1.0')
       ON CONFLICT(key) DO NOTHING;
@@ -400,8 +401,31 @@ app.post('/api/payment/counter', async (req, res) => {
 // PRINT AGENT APIs
 // ══════════════════════════════════════════════════════════════════════════════
 // Auto-update check
-app.get('/api/agent/version', (req, res) => {
-  res.json({ version: APP_VERSION, updateUrl: `${BASE_URL}/downloads/print_agent.py` });
+app.get('/api/agent/version', async (req, res) => {
+  // FIX: pehle hardcoded APP_VERSION return hota tha — naya agent version
+  // push karne ke liye SERVER CODE edit + redeploy karna padta, aur
+  // superadmin mein koi UI thi hi nahi. Isi liye Resume ka auto-update
+  // kabhi trigger nahi hua. Ab DB se, superadmin se push hota hai.
+  try {
+    const r = await pool.query("SELECT value FROM app_settings WHERE key='agent_version'");
+    const version = (r.rows.length && r.rows[0].value) ? r.rows[0].value : APP_VERSION;
+    res.json({ version, updateUrl: `${BASE_URL}/downloads/print_agent.py` });
+  } catch(err) {
+    res.json({ version: APP_VERSION, updateUrl: `${BASE_URL}/downloads/print_agent.py` });
+  }
+});
+
+// ── Admin: agent version push (naya exe upload karne ke BAAD hi!) ──
+app.post('/api/admin/agent-version', authAdmin, async (req, res) => {
+  try {
+    const { version } = req.body;
+    if (!/^\d+\.\d+\.\d+$/.test(String(version || '')))
+      return res.status(400).json({ error: 'Version format: X.Y.Z (jaise 2.5.0)' });
+    await pool.query(
+      `INSERT INTO app_settings(key,value) VALUES('agent_version',$1)
+       ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`, [version]);
+    res.json({ success: true });
+  } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/jobs/pending/:shopId', async (req, res) => {
