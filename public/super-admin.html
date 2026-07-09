@@ -69,6 +69,81 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .toast.show{transform:translateX(-50%) translateY(0)}
 @media(max-width:900px){.main-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="pnp-theme">
+/* ═══ PnPCreatix-style theme overlay — purple→blue→pink, white canvas ═══
+   Sab pages ke shared tokens override karta hai; markup/JS untouched. */
+:root{
+  --primary:#7c3aed !important; --primary-l:#f3ecff !important;
+  --bg:#ffffff !important; --white:#ffffff !important;
+  --text:#1a1030 !important; --muted:#7a6b99 !important;
+  --border:#ece7f5 !important;
+  --grad:linear-gradient(120deg,#7c3aed 0%,#4f7bf0 50%,#e0489f 100%);
+  --grad2:linear-gradient(120deg,#7c3aed,#e0489f);
+}
+body{background:#ffffff !important;font-family:'Inter',sans-serif !important;color:#1a1030}
+/* Gradient headings */
+.brand,.hdr h1,.card h3,.success h2,h1,h2{font-family:'Poppins',sans-serif !important}
+/* Top bars / nav -> white with gradient brand */
+nav,.topbar,.hdr,header{background:#fff !important;border-bottom:1.5px dashed #ece7f5 !important}
+nav .brand,.hdr h1,.brand{color:#7c3aed !important}
+/* Cards -> soft rounded with purple-tinted shadow */
+.card,.login-card,.pay-card,.success{background:#fff !important;border:1.5px solid #ece7f5 !important;
+  border-radius:20px !important;box-shadow:0 10px 34px rgba(124,58,237,.08) !important}
+/* Primary buttons -> gradient */
+.btn-primary,.btn-p,.pay-btn,.save-btn,.dl-agent,button.primary,.btn.primary,
+.rzp-btn,.btn-save{background:linear-gradient(120deg,#7c3aed,#e0489f) !important;
+  color:#fff !important;border:none !important;border-radius:14px !important;
+  font-family:'Poppins',sans-serif !important;font-weight:700 !important;
+  box-shadow:0 8px 22px rgba(124,58,237,.30) !important;transition:.15s !important}
+.btn-primary:hover,.pay-btn:hover,.save-btn:hover{transform:translateY(-2px) !important}
+/* Inputs */
+input,select,textarea{border:1.5px solid #ece7f5 !important;border-radius:12px !important;
+  font-family:'Inter',sans-serif !important;background:#fff !important;color:#1a1030 !important}
+input:focus,select:focus,textarea:focus{border-color:#7c3aed !important;outline:none !important;
+  box-shadow:0 0 0 3px rgba(124,58,237,.12) !important}
+/* Price highlight -> purple pill */
+.price-banner,.price-box{background:linear-gradient(120deg,#7c3aed,#4f7bf0) !important;
+  border-radius:18px !important}
+.price-offer{color:#fff !important;font-family:'Poppins',sans-serif !important}
+/* Stat cards */
+.stat{border:1.5px solid #ece7f5 !important;border-radius:16px !important;
+  box-shadow:0 6px 18px rgba(124,58,237,.07) !important}
+.stat-val{font-family:'Poppins',sans-serif !important}
+/* Tabs / selected states */
+.tab.active,.pay-opt.sel,.gw-tab.sel,.filter-tab.active{
+  background:#f3ecff !important;color:#7c3aed !important;border-color:#7c3aed !important}
+/* Gradient-circle checkmarks (feature lists) */
+.benefits li::marker,.feat-check{color:#7c3aed !important}
+::selection{background:#efe4ff}
+</style>
+
+<style id="pnp-login">
+/* ═══ Login screen — full PnPCreatix look (scoped to #loginSection) ═══ */
+#loginSection{position:fixed;inset:0;z-index:600;background:#fff;overflow-y:auto;
+  display:flex;align-items:center;justify-content:center;padding:20px;margin:0;max-width:none}
+#loginSection::before{content:'\2726';position:fixed;top:14%;left:12%;font-size:24px;color:#c9b8f0;pointer-events:none}
+#loginSection::after{content:'\2605';position:fixed;bottom:16%;right:14%;font-size:22px;color:#f0b8d8;pointer-events:none}
+#loginSection .login-card{background:#fff !important;border:1.5px solid #ece7f5 !important;border-radius:22px !important;
+  box-shadow:0 16px 44px rgba(124,58,237,.12) !important;padding:30px 24px !important;width:100%;max-width:400px;position:relative}
+#loginSection .login-card::before{content:'\1F4C4';position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+  width:52px;height:52px;background:linear-gradient(120deg,#7c3aed,#e0489f);border-radius:15px;display:flex;
+  align-items:center;justify-content:center;font-size:24px;box-shadow:0 10px 24px rgba(124,58,237,.4)}
+#loginSection .login-card h2,#loginSection .login-card h1{font-family:'Poppins',sans-serif !important;
+  font-weight:800 !important;color:#1a1030 !important;text-align:center;margin-top:16px !important}
+#loginSection .login-card p,#loginSection .login-card .sub{color:#7a6b99 !important;text-align:center}
+#loginSection label{color:#1a1030 !important;font-weight:600 !important}
+#loginSection input{border:1.5px solid #ece7f5 !important;border-radius:12px !important;background:#fff !important;color:#1a1030 !important}
+#loginSection input:focus{border-color:#7c3aed !important;box-shadow:0 0 0 3px rgba(124,58,237,.12) !important}
+#loginSection button,#loginSection .btn-primary,#loginSection .btn-p{
+  background:linear-gradient(120deg,#7c3aed,#e0489f) !important;color:#fff !important;border:none !important;
+  border-radius:14px !important;font-family:'Poppins',sans-serif !important;font-weight:700 !important;
+  box-shadow:0 8px 22px rgba(124,58,237,.3) !important}
+#loginSection a{color:#7c3aed !important}
+#loginSection .login-brand{position:absolute;top:18px;left:0;right:0;text-align:center;
+  font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#7c3aed}
+</style>
+
 </head>
 <body>
 

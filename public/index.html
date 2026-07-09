@@ -4,230 +4,85 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>QR Se Resume — Automatic Print System</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root{--ink:#1a1030;--muted:#7a6b99;--purple:#7c3aed;--blue:#4f7bf0;--pink:#e0489f;--grad:linear-gradient(120deg,#7c3aed 0%,#4f7bf0 48%,#e0489f 100%)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#1e3a8a;min-height:100vh}
-
-/* Fix: hero content above pseudo element */
-.hero{
-  background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#7c3aed 100%);
-  min-height:100vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:60px 20px 40px;
-  position:relative;
-}
-.hero-bg{
-  position:absolute;inset:0;
-  background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none; /* KEY FIX: bg cannot block clicks */
-  z-index:0;
-}
-.hero > *{position:relative;z-index:1;} /* All children above bg */
-
-/* Topbar */
-.topbar{
-  position:fixed;top:0;left:0;right:0;
-  z-index:200;
-  display:flex;justify-content:flex-end;
-  padding:12px 20px;gap:10px;
-}
-.shop-login-btn{
-  background:rgba(255,255,255,.18);
-  border:1px solid rgba(255,255,255,.35);
-  color:#fff;padding:8px 18px;border-radius:22px;
-  font-size:13px;font-weight:700;text-decoration:none;
-  backdrop-filter:blur(6px);transition:.2s;
-  display:inline-block;
-}
-.shop-login-btn:hover{background:rgba(255,255,255,.3);}
-
-/* Content */
-.badge{
-  background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.25);
-  color:#fff;padding:6px 20px;border-radius:22px;
-  font-size:12px;font-weight:600;letter-spacing:.5px;
-  margin-bottom:22px;display:inline-block;
-}
-.title-main{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:clamp(28px,6vw,62px);
-  font-weight:900;color:#fff;line-height:1.1;
-  margin-bottom:8px;
-}
-.title-sub-line{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:clamp(16px,3.5vw,28px);
-  font-weight:700;color:#fbbf24;
-  margin-bottom:18px;letter-spacing:.3px;
-}
-.desc{
-  font-size:15px;color:rgba(255,255,255,.72);
-  max-width:480px;line-height:1.75;
-  margin:0 auto 20px;
-}
-
-/* Price */
-.price-box{
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:18px;padding:14px 32px;
-  margin-bottom:28px;display:inline-block;
-}
-.price-actual{
-  font-size:15px;color:rgba(255,255,255,.4);
-  text-decoration:line-through;margin-bottom:3px;
-}
-.price-offer{
-  font-size:38px;font-weight:900;color:#4ade80;
-  font-family:'Plus Jakarta Sans',sans-serif;line-height:1;
-}
-.price-tag{font-size:10px;color:rgba(255,255,255,.45);margin-top:4px;}
-
-/* Buttons */
-.btns{
-  display:flex;gap:14px;flex-wrap:wrap;
-  justify-content:center;margin-bottom:36px;
-}
-.btn-main{
-  background:#fff;color:#1d4ed8;
-  padding:15px 36px;border-radius:14px;
-  font-weight:800;font-size:15px;border:none;
-  cursor:pointer;transition:all .2s;
-  text-decoration:none;font-family:'Inter',sans-serif;
-  display:inline-block;
-}
-.btn-main:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.25);}
-.btn-outline{
-  background:transparent;color:#fff;
-  padding:15px 30px;border-radius:14px;
-  font-weight:700;font-size:15px;
-  border:2px solid rgba(255,255,255,.4);
-  cursor:pointer;transition:all .2s;
-  text-decoration:none;font-family:'Inter',sans-serif;
-  display:inline-block;
-}
-.btn-outline:hover{background:rgba(255,255,255,.12);}
-
-/* Steps */
-.steps{
-  display:flex;gap:12px;flex-wrap:wrap;
-  justify-content:center;margin-bottom:28px;
-}
-.step{
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:14px;padding:13px 16px;
-  color:#fff;text-align:center;min-width:90px;
-}
-.step-icon{font-size:22px;margin-bottom:5px;}
-.step-txt{font-size:10px;font-weight:600;opacity:.75;}
-
-/* Features */
-.feats{
-  display:flex;gap:8px;flex-wrap:wrap;
-  justify-content:center;margin-bottom:30px;
-}
-.feat{
-  background:rgba(255,255,255,.09);
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:8px;padding:5px 13px;
-  color:rgba(255,255,255,.82);font-size:11px;font-weight:600;
-}
-
-/* Footer */
-.footer{color:rgba(255,255,255,.35);font-size:11px;line-height:1.8;}
-.footer a{color:rgba(255,255,255,.5);text-decoration:none;transition:.15s;}
-.footer a:hover{color:#fff;}
-.insta-wrap{margin-top:5px;display:inline-flex;align-items:center;gap:6px;}
-.super-link{display:block;margin-top:12px;font-size:10px;color:rgba(255,255,255,.15);text-decoration:none;}
-.super-link:hover{color:rgba(255,255,255,.35);}
+body{font-family:'Inter',sans-serif;color:var(--ink);background:#fff;min-height:100vh;overflow-x:hidden}
+.doodle{position:fixed;pointer-events:none;z-index:0;opacity:.8}
+@media (prefers-reduced-motion:no-preference){.doodle{animation:float 6s ease-in-out infinite alternate}.dl2,.dl4{animation-duration:8s}@keyframes float{to{transform:translateY(-14px) rotate(8deg)}}}
+.dl1{top:11%;left:7%;font-size:26px}.dl2{top:16%;right:9%;font-size:22px}.dl3{top:38%;left:5%;font-size:20px}.dl4{top:46%;right:6%;font-size:26px}.dl5{bottom:20%;left:9%;font-size:22px}.dl6{bottom:15%;right:11%;font-size:24px}
+.wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:14px 20px 40px;text-align:center}
+.topbar{display:flex;justify-content:flex-end;padding-bottom:10px}
+.login-pill{border:2px solid var(--purple);color:var(--purple);text-decoration:none;padding:8px 18px;border-radius:22px;font-size:13px;font-weight:700;background:#fff;transition:.15s;display:inline-block}
+.login-pill:hover{background:var(--purple);color:#fff}
+.brand-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 24px}
+.brand{display:flex;align-items:center;gap:9px;font-family:'Poppins',sans-serif;font-weight:800;font-size:19px}
+.brand-mark{width:32px;height:32px;border-radius:10px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 6px 16px rgba(124,58,237,.35)}
+.badge{display:inline-block;background:#f3ecff;color:var(--purple);font-weight:700;font-size:11px;padding:6px 16px;border-radius:20px;margin-bottom:16px;letter-spacing:.3px}
+.h-top{font-family:'Poppins',sans-serif;font-weight:700;font-size:clamp(26px,7vw,38px);letter-spacing:-.5px;line-height:1.1}
+.h-hero{font-family:'Poppins',sans-serif;font-weight:900;font-size:clamp(52px,15vw,88px);line-height:.98;letter-spacing:-2px;margin:2px 0 6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.h-sub{font-family:'Poppins',sans-serif;font-weight:600;font-size:clamp(15px,4vw,20px);color:var(--ink);margin-bottom:24px}
+.price-wrap{position:relative;display:inline-block;margin-bottom:8px}
+.price-pill{background:var(--grad);border-radius:40px;padding:16px 36px 16px 30px;box-shadow:0 12px 30px rgba(124,58,237,.35);display:flex;align-items:center;gap:12px}
+.price-only{color:rgba(255,255,255,.9);font-size:15px;font-weight:600}
+.price-actual{color:rgba(255,255,255,.6);font-size:14px;text-decoration:line-through;display:block;line-height:1}
+.price-offer{font-family:'Poppins',sans-serif;font-weight:900;font-size:clamp(38px,11vw,52px);color:#fff;line-height:1}
+.price-note{font-size:11px;color:var(--muted);margin-bottom:26px}
+.feats{display:inline-flex;flex-direction:column;gap:11px;text-align:left;margin-bottom:30px}
+.feat{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:600;color:#33254d}
+.feat .ck{width:24px;height:24px;border-radius:50%;background:var(--grad);color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(124,58,237,.3)}
+.steps{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-bottom:28px}
+.step{background:#faf7ff;border:1.5px solid #efe7fb;border-radius:13px;padding:11px 12px;min-width:78px}
+.step b{display:block;font-size:20px;margin-bottom:3px}
+.step span{font-size:10px;font-weight:600;color:#6a5c85}
+.step-arrow{align-self:center;color:#d9cff0;font-weight:800}
+.cta-main{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--grad);color:#fff;text-decoration:none;border-radius:16px;padding:18px;margin-bottom:12px;font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;box-shadow:0 12px 28px rgba(124,58,237,.35);transition:.15s}
+.cta-main:hover{transform:translateY(-2px)}
+.cta-sub{display:block;text-decoration:none;color:var(--purple);border:2px solid var(--purple);border-radius:16px;padding:14px;font-weight:700;font-size:14px;margin-bottom:32px;transition:.15s}
+.cta-sub:hover{background:var(--purple);color:#fff}
+.cta-main:focus-visible,.cta-sub:focus-visible,.login-pill:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.footer{border-top:1.5px dashed #ece7f5;padding:18px 20px calc(20px + env(safe-area-inset-bottom));font-size:11px;color:#a99cc4;line-height:1.9;text-align:center}
+.footer a{color:var(--muted);text-decoration:none}.footer a:hover{color:var(--purple)}
+.super-link{display:block;margin-top:8px;font-size:10px;color:#ece7f5;text-decoration:none}
+.super-link:hover{color:var(--muted)}
 </style>
 </head>
 <body>
-
-<!-- Fixed top login button -->
-<div class="topbar">
-  <a href="/shop-admin" class="shop-login-btn">🔑 Shop Owner Login</a>
-</div>
-
-<div class="hero">
-  <!-- Background pattern — pointer-events none so it never blocks clicks -->
-  <div class="hero-bg"></div>
-
-  <div class="badge">📄 v2.1 — Now Live!</div>
-
-  <div class="title-main">QR Se Resume Banao</div>
-  <div class="title-sub-line">🖨️ Automatic Print System</div>
-
-  <p class="desc">
-    Customer QR scan kare, details bhare, PDF bane<br>
-    aur automatically printer se print ho jaye!
-  </p>
-
-  <div class="price-box">
-    <div class="price-actual" id="actualPrice">₹999</div>
-    <div class="price-offer" id="offerPrice">₹499</div>
-    <div class="price-tag">One-time setup fee • Lifetime use</div>
-  </div>
-
-  <div class="btns">
-    <a href="/setup" class="btn-main">🚀 Abhi Start Karein</a>
-    <a href="/shop-admin" class="btn-outline">🔑 Shop Login</a>
-  </div>
-
-  <div class="steps">
-    <div class="step"><div class="step-icon">📱</div><div class="step-txt">QR Scan</div></div>
-    <div class="step"><div class="step-icon">📝</div><div class="step-txt">Details Fill</div></div>
-    <div class="step"><div class="step-icon">👁</div><div class="step-txt">Preview</div></div>
-    <div class="step"><div class="step-icon">💳</div><div class="step-txt">Pay</div></div>
-    <div class="step"><div class="step-icon">🖨️</div><div class="step-txt">Auto Print</div></div>
-  </div>
-
+<div class="doodle dl1">&#10022;</div><div class="doodle dl2">&#10023;</div><div class="doodle dl3">&#9733;</div>
+<div class="doodle dl4">&#10022;</div><div class="doodle dl5">&#10023;</div><div class="doodle dl6">&#9733;</div>
+<div class="wrap">
+  <div class="topbar"><a href="/shop-admin" class="login-pill">&#128273; Shop Owner Login</a></div>
+  <div class="brand-row"><div class="brand"><div class="brand-mark">&#128196;</div>QR Se Resume</div></div>
+  <div class="badge">&#9889; AUTOMATIC PRINT SYSTEM</div>
+  <div class="h-top">Customer QR scan kare,</div>
+  <div class="h-hero">Resume</div>
+  <div class="h-sub">details bhare, PDF bane &mdash; aur printer se auto print!</div>
+  <div class="price-wrap"><div class="price-pill"><span class="price-only">Only</span><div><span class="price-actual" id="actualPrice">&#8377;999</span><span class="price-offer">&#8377;<span id="offerPrice">499</span></span></div></div></div>
+  <div class="price-note">One-time setup fee &bull; No monthly charge &bull; Lifetime use</div>
   <div class="feats">
-    <div class="feat">✅ No Monthly Fee</div>
-    <div class="feat">✅ Auto Print</div>
-    <div class="feat">✅ Online + Counter Pay</div>
-    <div class="feat">✅ QR Code</div>
-    <div class="feat">✅ Auto Update</div>
-    <div class="feat">✅ System Tray Agent</div>
+    <div class="feat"><span class="ck">&#10003;</span> Automatic Print &mdash; koi manual kaam nahi</div>
+    <div class="feat"><span class="ck">&#10003;</span> Online + Counter, dono payment</div>
+    <div class="feat"><span class="ck">&#10003;</span> Apni shop ka unique QR Code</div>
+    <div class="feat"><span class="ck">&#10003;</span> System Tray Agent &mdash; background mein</div>
+    <div class="feat"><span class="ck">&#10003;</span> Auto Update &mdash; hamesha latest</div>
   </div>
-
-  <div class="footer">
-    <p>© 2026 All Rights Reserved | Developed by Rupesh Kumar Mahato</p>
-    <a href="https://instagram.com/rupeshkr73" target="_blank" class="insta-wrap">
-      <svg width="18" height="18" viewBox="0 0 24 24">
-        <defs>
-          <radialGradient id="ig" cx="30%" cy="107%" r="150%">
-            <stop offset="0%" stop-color="#fdf497"/>
-            <stop offset="45%" stop-color="#fd5949"/>
-            <stop offset="60%" stop-color="#d6249f"/>
-            <stop offset="90%" stop-color="#285AEB"/>
-          </radialGradient>
-        </defs>
-        <rect width="24" height="24" rx="6" fill="url(#ig)"/>
-        <path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" fill="#fff"/>
-        <circle cx="15.8" cy="8.2" r="1" fill="#fff"/>
-        <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" stroke="#fff" stroke-width="1.5" fill="none"/>
-      </svg>
-    </a>
-    <a href="/super-admin" class="super-link">⚙</a>
+  <div class="steps">
+    <div class="step"><b>&#128241;</b><span>QR Scan</span></div><div class="step-arrow">&rsaquo;</div>
+    <div class="step"><b>&#128221;</b><span>Details</span></div><div class="step-arrow">&rsaquo;</div>
+    <div class="step"><b>&#128179;</b><span>Pay</span></div><div class="step-arrow">&rsaquo;</div>
+    <div class="step"><b>&#128424;</b><span>Auto Print</span></div>
   </div>
-
+  <a href="/setup" class="cta-main">&#128640; Abhi Start Karein &rsaquo;</a>
+  <a href="/shop-admin" class="cta-sub">&#128273; Shop Login</a>
 </div>
-
+<div class="footer">
+  <p>&copy; 2026 All Rights Reserved | Developed by Rupesh Kumar Mahato</p>
+  <a href="https://instagram.com/rupeshkr73" target="_blank" rel="noopener">&#128247; @rupeshkr73</a>
+  <a href="/super-admin" class="super-link">&#9881;</a>
+</div>
 <script>
-async function loadPrices() {
-  try {
-    const r   = await fetch('/api/settings');
-    const cfg = await r.json();
-    if (cfg.setup_price)       document.getElementById('actualPrice').textContent = '₹' + cfg.setup_price;
-    if (cfg.setup_offer_price) document.getElementById('offerPrice').textContent  = '₹' + cfg.setup_offer_price;
-  } catch(e) {}
-}
+async function loadPrices(){try{const r=await fetch('/api/settings');const cfg=await r.json();if(cfg.setup_price)document.getElementById('actualPrice').textContent='\u20B9'+cfg.setup_price;if(cfg.setup_offer_price)document.getElementById('offerPrice').textContent=cfg.setup_offer_price;}catch(e){}}
 loadPrices();
 </script>
 </body>
