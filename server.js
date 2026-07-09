@@ -43,6 +43,26 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// EXE DOWNLOAD — smart redirect. Exe ab 32MB ka hai, GitHub Releases par
+// rehta hai (git repo mein nahi). Superadmin mein link save karo — yahan
+// se redirect hota hai. URL wahi purana hai isliye shop-admin ka button,
+// setup page, aur SAARE deployed agents (auto + manual update) bina kisi
+// change ke naye link par chale jaate hain.
+// NOTE: yeh route express.static se PEHLE hai — repo mein koi purani exe
+// bhooli reh jaye to bhi redirect hi jeetega, stale file serve nahi hogi.
+app.get('/downloads/QRSeResume_Agent.exe', async (req, res) => {
+  try {
+    const r = await pool.query("SELECT value FROM app_settings WHERE key='agent_exe_url'");
+    const url = r.rows.length ? (r.rows[0].value || '') : '';
+    if (url) return res.redirect(url);
+    const local = path.join(__dirname, 'public', 'downloads', 'QRSeResume_Agent.exe');
+    if (fs.existsSync(local)) return res.sendFile(local);
+    res.status(404).send('Agent exe abhi upload nahi hua — Super Admin panel mein download link set karo');
+  } catch(err) {
+    res.status(500).send('Download error: ' + err.message);
+  }
+});
+
 app.use(express.static('public'));
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20*1024*1024 } });
@@ -102,6 +122,7 @@ async function initDB() {
 
       INSERT INTO app_settings(key,value) VALUES
         ('agent_version','2.5.0'),
+        ('agent_exe_url',''),
         ('setup_price','499'),('setup_offer_price','499'),
         ('app_version','2.1.0')
       ON CONFLICT(key) DO NOTHING;
@@ -407,15 +428,32 @@ app.get('/api/agent/version', async (req, res) => {
   // superadmin mein koi UI thi hi nahi. Isi liye Resume ka auto-update
   // kabhi trigger nahi hua. Ab DB se, superadmin se push hota hai.
   try {
-    const r = await pool.query("SELECT value FROM app_settings WHERE key='agent_version'");
-    const version = (r.rows.length && r.rows[0].value) ? r.rows[0].value : APP_VERSION;
-    res.json({ version, updateUrl: `${BASE_URL}/downloads/print_agent.py` });
+    const r = await pool.query("SELECT key, value FROM app_settings WHERE key IN ('agent_version','agent_exe_url')");
+    const kv = Object.fromEntries(r.rows.map(x => [x.key, x.value]));
+    res.json({
+      version: kv.agent_version || APP_VERSION,
+      exeUrl: kv.agent_exe_url || '',
+      updateUrl: `${BASE_URL}/downloads/print_agent.py`
+    });
   } catch(err) {
     res.json({ version: APP_VERSION, updateUrl: `${BASE_URL}/downloads/print_agent.py` });
   }
 });
 
 // ── Admin: agent version push (naya exe upload karne ke BAAD hi!) ──
+app.post('/api/admin/agent-exe-url', authAdmin, async (req, res) => {
+  try {
+    const { url } = req.body;
+    // Khaali = local file fallback; warna https zaroori
+    if (url && !/^https:\/\//.test(String(url)))
+      return res.status(400).json({ error: 'Link https:// se shuru hona chahiye' });
+    await pool.query(
+      `INSERT INTO app_settings(key,value) VALUES('agent_exe_url',$1)
+       ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`, [url || '']);
+    res.json({ success: true });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
 app.post('/api/admin/agent-version', authAdmin, async (req, res) => {
   try {
     const { version } = req.body;
