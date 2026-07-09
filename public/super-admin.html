@@ -115,6 +115,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="main-grid">
     <!-- Left: Shops table -->
     <div>
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">🖥️ Print Agent Version</div>
+        </div>
+        <div style="padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--muted)">Current live: <b style="color:#58a6ff;font-size:15px" id="agentVerDisplay">—</b></div>
+          <input id="agentVerInput" placeholder="2.5.0" style="width:110px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit;font-family:monospace">
+          <button class="btn-sm btn-sm-p" onclick="pushAgentVersion()">🚀 Push Version</button>
+          <div style="flex-basis:100%;font-size:10px;color:var(--muted)">⚠️ Pehle naya exe <code>public/downloads/</code> mein deploy karo, USKE BAAD version push — ulta kiya to agents aisa exe download karenge jo exist nahi karta</div>
+        </div>
+      </div>
+
       <div class="panel" id="unlockPanel" style="display:none;border-color:#d29922">
         <div class="panel-hdr">
           <div class="panel-title">⚡ Advanced Feature Unlock Requests <span id="unlockCount" style="background:#d29922;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700"></span></div>
@@ -250,6 +262,7 @@ async function loadShops() {
       </tr>`;
     }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No shops yet</td></tr>';
     loadUnlockRequests();
+    loadAgentVersion();
   } catch(e) { toast('❌ Shops: '+e.message); }
 }
 
@@ -324,6 +337,24 @@ async function saveVersion() {
   }
 }
 
+async function loadAgentVersion(){
+  try{
+    const d = await fetch('/api/agent/version').then(r=>r.json());
+    document.getElementById('agentVerDisplay').textContent = 'v' + d.version;
+    document.getElementById('agentVerInput').placeholder = d.version;
+  }catch(e){}
+}
+async function pushAgentVersion(){
+  const v = document.getElementById('agentVerInput').value.trim();
+  if(!/^\d+\.\d+\.\d+$/.test(v)) return toast('❌ Format: X.Y.Z (jaise 2.5.0)');
+  if(!confirm(`Version v${v} push karein? Saare agents agle check par isse download karenge — naya exe public/downloads/ mein deployed hai na?`)) return;
+  try{
+    const r = await fetch('/api/admin/agent-version',{method:'POST',headers:authH(),body:JSON.stringify({version:v})});
+    const d = await r.json();
+    if(d.success){ toast('🚀 Version v'+v+' live!'); loadAgentVersion(); }
+    else toast('❌ '+(d.error||'Failed'));
+  }catch(e){ toast('❌ '+e.message); }
+}
 async function loadUnlockRequests(){
   try{
     const reqs = await fetch('/api/admin/unlock-requests',{headers:authH()}).then(r=>r.json());
