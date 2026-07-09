@@ -218,6 +218,8 @@ input:focus,select:focus,textarea:focus{border-color:#7c3aed !important;outline:
 
     <div class="warn-box">⚠️ Keys safely encrypted hoke store honge. Kisi ke saath share mat karo.</div>
     <button class="btn btn-p" onclick="goStep3()">Aage — Pay & Get QR →</button>
+    <button class="btn" style="background:#fff;border:1.5px solid var(--purple,#7c3aed);color:var(--purple,#7c3aed)" onclick="skipOnlineSetup()">🪙 Abhi Skip Karo — Sirf Counter Payment Se Aage Bado</button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin:-4px 0 10px;line-height:1.5">Online gateway baad mein Shop Login se add kar sakte ho. Ye choose karne par shop <b>Counter-only</b> ho jayegi.</div>
     <button class="btn btn-b" onclick="showSec(1)">← Wapas</button>
   </div>
 </div>
@@ -322,6 +324,18 @@ function goStep2() {
   if (gv('s_pass') !== gv('s_pass2')) { toast('❌ Password match nahi kar raha!'); return; }
   if (gv('s_pass').length < 6) { toast('❌ Password kam se kam 6 characters ka hona chahiye'); return; }
   showSec(2);
+}
+
+function skipOnlineSetup() {
+  // Payment mode ZABARDASTI counter — bhale user ne pehle "Online" ya
+  // "Online+Counter" select kiya ho. Gateway fields clear taaki aधूरी keys
+  // save na hon. Preview (step 3) aur registration dono counter dikhayenge.
+  document.getElementById('s_paymode').value = 'counter';
+  ['s_rzp_id','s_rzp_secret','s_pp_key'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  toast('🪙 Sirf Counter Payment set — online gateway skip');
+  goStep3();
 }
 
 function goStep3() {
